@@ -1,0 +1,29 @@
+{
+  "bookings": [
+    {
+      "id": "84ca2cbc-53ea-42ca-91ad-ebc6286af43c",
+      "name": "ama",
+      "email": "ama@gmail.com",
+      "date": "2026-02-11",
+      "time": "09:00",
+      "status": "confirmed",
+      "createdAt": "2026-02-09T19:39:36.961Z"
+    }
+  ],
+  "settings": {
+    "availableHours": [
+      "09:00",
+      "10:00",
+      "11:00",
+      "13:00",
+      "14:00",
+      "15:00",
+      "16:00",
+      "17:00"
+    ]
+  },
+  "content": {
+    "heroTitle": "Unlock Your True Potential",
+    "heroSubtitle": "Personalized training programs designed to help you build strength, lose weight, and transform your lifestyle."
+  }
+}

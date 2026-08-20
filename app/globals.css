@@ -2,25 +2,88 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
+  --primary: #FF4D00;
+  /* More intense orange */
+  --primary-foreground: #ffffff;
+  --secondary: #000000;
+  --secondary-foreground: #ffffff;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #FF4D00;
+  --accent-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #FF4D00;
+  --radius: 0.75rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-montserrat), Arial, Helvetica, sans-serif;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #000000;
+    --foreground: #ffffff;
+    --muted: #18181b;
+    --muted-foreground: #a1a1aa;
+    --border: #27272a;
+    --input: #27272a;
   }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer utilities {
+  .container-custom {
+    @apply max-w-7xl mx-auto px-6 sm:px-8 lg:px-12;
+  }
+
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
+  }
+
+  .dark .glass {
+    @apply bg-black/70 backdrop-blur-md border border-white/10;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-orange-400;
+  }
+
+  @keyframes ticker {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-33.333%);
+    }
+  }
+
+  .animate-ticker {
+    animation: ticker 60s linear infinite;
+  }
 }
