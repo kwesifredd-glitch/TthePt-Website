@@ -78,7 +78,7 @@ export function StaggerContainer({
     delayChildren?: number;
     className?: string;
     once?: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
 }) {
     return (
         <motion.div

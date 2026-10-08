@@ -22,7 +22,7 @@ export default function AboutPage() {
                                 The <span className="text-primary not-italic">Method</span>
                             </h1>
                             <p className="text-lg sm:text-2xl md:text-3xl text-gray-300 font-bold tracking-tight leading-tight">
-                                We don't just train bodies. We architect peak performance through
+                                We don&apos;t just train bodies. We architect peak performance through
                                 uncompromising standards and scientific precision.
                             </p>
                         </AnimatedSection>
@@ -55,7 +55,7 @@ export default function AboutPage() {
 
                             <StaggerItem direction="up">
                                 <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-none uppercase italic">
-                                    I'M TERRENCE. <br />
+                                    I&apos;M TERRENCE. <br />
                                     <span className="text-primary not-italic">TthePT.</span>
                                 </h2>
                             </StaggerItem>
@@ -63,10 +63,10 @@ export default function AboutPage() {
                             <StaggerItem direction="up">
                                 <div className="space-y-4 sm:space-y-6 text-base sm:text-lg md:text-xl text-gray-300 font-medium leading-relaxed">
                                     <p>
-                                        With over a decade in high-performance conditioning, I've seen every fad, trend, and "shortcut." They all fail because they ignore the fundamental truth of human physiology: <span className="text-white font-black italic">excellence is a deliberate daily occurrence.</span>
+                                        With over a decade in high-performance conditioning, I&apos;ve seen every fad, trend, and &quot;shortcut.&quot; They all fail because they ignore the fundamental truth of human physiology: <span className="text-white font-black italic">excellence is a deliberate daily occurrence.</span>
                                     </p>
                                     <p>
-                                        My methodology is forged in the fires of elite athletics and refined by years of data-driven coaching. I specialize in taking high-performers from "fit" to "unbreakable."
+                                        My methodology is forged in the fires of elite athletics and refined by years of data-driven coaching. I specialize in taking high-performers from &quot;fit&quot; to &quot;unbreakable.&quot;
                                     </p>
                                 </div>
                             </StaggerItem>

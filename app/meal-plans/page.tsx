@@ -537,7 +537,7 @@ export default function MealPlansPage() {
                                         BEYOND THE <br /><span className="text-primary not-italic uppercase">CALORIE.</span>
                                     </h2>
                                     <p className="text-xl text-gray-400 font-bold italic leading-relaxed">
-                                        Elite performance is balanced on a razor's edge of nutrient density. Generic supplementation protocols are a waste of operational capital.
+                                        Elite performance is balanced on a razor&apos;s edge of nutrient density. Generic supplementation protocols are a waste of operational capital.
                                     </p>
                                     <div className="grid grid-cols-2 gap-8">
                                         <div className="flex items-start gap-4">

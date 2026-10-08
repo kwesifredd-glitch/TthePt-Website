@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, Twitter, Mail, MapPin, Phone, Dumbbell } from "lucide-react";
+import { Facebook, Instagram, Twitter, Mail, MapPin, Phone } from "lucide-react";
 
 const Footer = () => {
     return (
@@ -91,9 +91,13 @@ const Footer = () => {
             <div className="container-custom">
                 <div className="border-t border-white/5 mt-20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-gray-600 tracking-widest uppercase">
                     <p>&copy; {new Date().getFullYear()} TthePT. ALL RIGHTS RESERVED.</p>
-                    <div className="flex gap-8">
+                    <div className="flex gap-8 items-center">
                         <a href="#" className="hover:text-white">Privacy Policy</a>
                         <a href="#" className="hover:text-white">Terms of Service</a>
+                        <Link href="/admin" className="hover:text-primary transition-colors flex items-center gap-1.5 text-zinc-500">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                            Staff Portal
+                        </Link>
                     </div>
                 </div>
             </div>

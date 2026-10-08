@@ -10,14 +10,36 @@ import { useState } from "react";
 
 export default function ContactPage() {
     const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        objective: ""
+    });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus("submitting");
-        // Simulate API call
-        setTimeout(() => {
-            setStatus("success");
-        }, 1500);
+        try {
+            const res = await fetch("/api/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: `${formData.firstName} ${formData.lastName}`.trim() || formData.firstName || "Inquirer",
+                    email: formData.email,
+                    objective: formData.objective
+                })
+            });
+            if (res.ok) {
+                setStatus("success");
+            } else {
+                alert("Failed to submit inquiry. Please try again.");
+                setStatus("idle");
+            }
+        } catch (error) {
+            console.error("Submission failed", error);
+            setStatus("idle");
+        }
     };
 
     return (
@@ -117,22 +139,46 @@ export default function ContactPage() {
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Identity</label>
-                                                <Input placeholder="MARCUS" required className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/10" />
+                                                <Input
+                                                    placeholder="MARCUS"
+                                                    required
+                                                    value={formData.firstName}
+                                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                                    className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/10"
+                                                />
                                             </div>
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Cognomen</label>
-                                                <Input placeholder="AURELIUS" required className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/10" />
+                                                <Input
+                                                    placeholder="AURELIUS"
+                                                    value={formData.lastName}
+                                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                                    className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/10"
+                                                />
                                             </div>
                                         </div>
 
                                         <div className="space-y-3">
                                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Signal Hash (Email)</label>
-                                            <Input type="email" placeholder="YOU@ELITE.COM" required className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/10" />
+                                            <Input
+                                                type="email"
+                                                placeholder="YOU@ELITE.COM"
+                                                required
+                                                value={formData.email}
+                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/10"
+                                            />
                                         </div>
 
                                         <div className="space-y-3">
                                             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Objective</label>
-                                            <Textarea placeholder="Detail your mission requirements..." className="min-h-[150px] bg-white/5 border-white/10 rounded-2xl focus:ring-primary font-bold placeholder:text-white/10 p-6" required />
+                                            <Textarea
+                                                placeholder="Detail your mission requirements..."
+                                                className="min-h-[150px] bg-white/5 border-white/10 rounded-2xl focus:ring-primary font-bold placeholder:text-white/10 p-6"
+                                                required
+                                                value={formData.objective}
+                                                onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
+                                            />
                                         </div>
 
                                         <Button type="submit" className="w-full h-16 rounded-full bg-primary hover:bg-orange-600 text-white font-black uppercase tracking-widest transition-all hover:scale-[1.02] shadow-xl" disabled={status === "submitting"}>

@@ -1,13 +1,317 @@
 {
   "bookings": [
     {
-      "id": "84ca2cbc-53ea-42ca-91ad-ebc6286af43c",
-      "name": "ama",
-      "email": "ama@gmail.com",
-      "date": "2026-02-11",
-      "time": "09:00",
+      "id": "845380de-3b9f-4379-b778-4d5386b65930",
+      "name": "Samuel Adebayo",
+      "email": "samuel.adebayo@lagosops.ng",
+      "phone": "",
+      "date": "2026-10-09",
+      "time": "11:00",
+      "package": "12 Sessions a month",
+      "price": 280,
+      "currency": "GBP",
       "status": "confirmed",
-      "createdAt": "2026-02-09T19:39:36.961Z"
+      "paymentStatus": "paid",
+      "paymentMethod": "paystack",
+      "paymentRef": "pstk_test_tx_7721",
+      "paidAt": "2026-10-08T18:55:00.000Z",
+      "notes": "Auto-enrolled via Paystack charge.success webhook (pstk_test_tx_7721)",
+      "source": "external_checkout",
+      "createdAt": "2026-10-08T18:56:59.550Z"
+    },
+    {
+      "id": "395e7e7f-7d3e-45ca-9449-d18bacd269ba",
+      "name": "David Sterling",
+      "email": "david.sterling@apex.co.uk",
+      "phone": "",
+      "date": "2026-10-09",
+      "time": "10:00",
+      "package": "12 Sessions a month",
+      "price": 280,
+      "currency": "GBP",
+      "status": "confirmed",
+      "paymentStatus": "paid",
+      "paymentMethod": "paystack",
+      "paymentRef": "PAYSTACK_REF_849198",
+      "paidAt": "2026-10-08T18:57:47.394Z",
+      "notes": "Auto-created from third-party STRIPE payment payload (ch_live_621242)",
+      "source": "external_checkout",
+      "createdAt": "2026-10-08T18:20:50.587Z"
+    },
+    {
+      "id": "c5d59b22-5369-4b4c-b38d-0df1cb02464f",
+      "name": "Elena Rostova",
+      "email": "elena.rostova@cyberdyn.com",
+      "phone": "",
+      "date": "2026-10-09",
+      "time": "10:00",
+      "package": "12 Sessions a month",
+      "price": 280,
+      "currency": "GBP",
+      "status": "confirmed",
+      "paymentStatus": "paid",
+      "paymentMethod": "stripe",
+      "paymentRef": "ch_3NqVLiveTest99",
+      "paidAt": "2026-10-08T18:17:43.279Z",
+      "notes": "Auto-created from third-party STRIPE payment payload (ch_3NqVLiveTest99)",
+      "source": "external_checkout",
+      "createdAt": "2026-10-08T18:17:43.279Z"
+    },
+    {
+      "id": "469e4b90-4eec-420c-aae1-7ef14a02f97f",
+      "name": "Alfred",
+      "email": "kwesifredd@gmail.com",
+      "phone": "+44 7911 123456",
+      "date": "2026-10-31",
+      "time": "09:00",
+      "package": "12 Sessions a month",
+      "price": 280,
+      "currency": "GBP",
+      "status": "confirmed",
+      "paymentStatus": "paid",
+      "paymentMethod": "stripe",
+      "paymentRef": "pi_3NqV12LkdIwHu7ix1gL8",
+      "paidAt": "2026-10-07T16:26:16.127Z",
+      "notes": "Prefers morning operational slots. High endurance background.",
+      "goals": "Hypertrophy & Strength Conditioning",
+      "source": "website_booking",
+      "createdAt": "2026-10-07T16:26:16.127Z"
+    },
+    {
+      "id": "84ca2cbc-53ea-42ca-91ad-ebc6286af43c",
+      "name": "Ama",
+      "email": "ama@gmail.com",
+      "phone": "+44 7822 654321",
+      "date": "2026-11-15",
+      "time": "10:00",
+      "package": "8 Sessions a month",
+      "price": 200,
+      "currency": "GBP",
+      "status": "confirmed",
+      "paymentStatus": "unpaid",
+      "paymentMethod": "pending_gateway",
+      "notes": "Sent invoice link. Awaiting Stripe payment.",
+      "goals": "Lean Body Composition & Mobility",
+      "source": "website_booking",
+      "createdAt": "2026-10-08T11:20:00.000Z"
+    },
+    {
+      "id": "c19b22e1-77ad-45fc-9a1b-3f44e883820a",
+      "name": "Marcus Kane",
+      "email": "m.kane@apexlogistics.co.uk",
+      "phone": "+44 7700 900888",
+      "date": "2026-11-18",
+      "time": "14:00",
+      "package": "Single Session",
+      "price": 30,
+      "currency": "GBP",
+      "status": "pending",
+      "paymentStatus": "paid",
+      "paymentMethod": "paypal",
+      "paymentRef": "PAYID-MN67890123",
+      "paidAt": "2026-10-08T14:35:10.000Z",
+      "notes": "Booked via external payment link.",
+      "goals": "Biomechanical Assessment & Form Optimization",
+      "source": "external_checkout",
+      "createdAt": "2026-10-08T14:30:00.000Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "tx_paystack_1791485867438",
+      "bookingId": "395e7e7f-7d3e-45ca-9449-d18bacd269ba",
+      "clientName": "David Sterling",
+      "clientEmail": "david.sterling@apex.co.uk",
+      "amount": 280,
+      "currency": "GBP",
+      "platform": "paystack",
+      "status": "succeeded",
+      "referenceId": "PAYSTACK_REF_849198",
+      "description": "Paystack Charge Verified (PAYSTACK_REF_849198)",
+      "eventType": "charge.success",
+      "rawPayload": {
+        "event": "charge.success",
+        "data": {
+          "id": 373289,
+          "domain": "live",
+          "status": "success",
+          "reference": "PAYSTACK_REF_849198",
+          "amount": 28000,
+          "currency": "GBP",
+          "paid_at": "2026-10-08T18:57:47.394Z",
+          "channel": "card",
+          "gateway_response": "Successful",
+          "metadata": {
+            "clientName": "David Sterling",
+            "package": "12 Sessions a month",
+            "email": "david.sterling@apex.co.uk"
+          },
+          "customer": {
+            "id": 82259,
+            "email": "david.sterling@apex.co.uk",
+            "first_name": "David",
+            "last_name": "Sterling",
+            "customer_code": "CUS_yet2toi"
+          }
+        }
+      },
+      "createdAt": "2026-10-08T18:57:47.438Z"
+    },
+    {
+      "id": "tx_paystack_1791485828356",
+      "bookingId": "bk_test_123",
+      "clientName": "Paystack Trainee",
+      "clientEmail": "client@paystack.com",
+      "amount": 30,
+      "currency": "GBP",
+      "platform": "paystack",
+      "status": "succeeded",
+      "referenceId": "tthept_bk_test_123_1791485823397",
+      "description": "Paystack Verified Checkout (tthept_bk_test_123_1791485823397)",
+      "eventType": "transaction.verify",
+      "createdAt": "2026-10-08T18:57:08.356Z"
+    },
+    {
+      "id": "tx_paystack_1791485819553",
+      "bookingId": "845380de-3b9f-4379-b778-4d5386b65930",
+      "clientName": "Samuel Adebayo",
+      "clientEmail": "samuel.adebayo@lagosops.ng",
+      "amount": 280,
+      "currency": "GBP",
+      "platform": "paystack",
+      "status": "succeeded",
+      "referenceId": "pstk_test_tx_7721",
+      "description": "Paystack Charge Verified (pstk_test_tx_7721)",
+      "eventType": "charge.success",
+      "rawPayload": {
+        "event": "charge.success",
+        "data": {
+          "id": 892341,
+          "domain": "test",
+          "status": "success",
+          "reference": "pstk_test_tx_7721",
+          "amount": 28000,
+          "currency": "GBP",
+          "paid_at": "2026-10-08T18:55:00.000Z",
+          "channel": "card",
+          "customer": {
+            "email": "samuel.adebayo@lagosops.ng",
+            "first_name": "Samuel",
+            "last_name": "Adebayo"
+          },
+          "metadata": {
+            "package": "12 Sessions a month",
+            "clientName": "Samuel Adebayo"
+          }
+        }
+      },
+      "createdAt": "2026-10-08T18:56:59.553Z"
+    },
+    {
+      "id": "tx_stripe_1791483650588",
+      "bookingId": "395e7e7f-7d3e-45ca-9449-d18bacd269ba",
+      "clientName": "David Sterling",
+      "clientEmail": "david.sterling@apex.co.uk",
+      "amount": 280,
+      "currency": "GBP",
+      "platform": "stripe",
+      "status": "succeeded",
+      "referenceId": "ch_live_621242",
+      "description": "Stripe Payment (checkout.session.completed) - ch_live_621242",
+      "eventType": "checkout.session.completed",
+      "rawPayload": {
+        "id": "evt_1791483650553",
+        "object": "event",
+        "type": "checkout.session.completed",
+        "data": {
+          "object": {
+            "id": "ch_live_621242",
+            "amount_total": 28000,
+            "currency": "gbp",
+            "customer_details": {
+              "name": "David Sterling",
+              "email": "david.sterling@apex.co.uk"
+            },
+            "metadata": {
+              "package": "12 Sessions a month",
+              "email": "david.sterling@apex.co.uk",
+              "name": "David Sterling"
+            }
+          }
+        }
+      },
+      "createdAt": "2026-10-08T18:20:50.588Z"
+    },
+    {
+      "id": "tx_stripe_1791483463280",
+      "bookingId": "c5d59b22-5369-4b4c-b38d-0df1cb02464f",
+      "clientName": "Elena Rostova",
+      "clientEmail": "elena.rostova@cyberdyn.com",
+      "amount": 280,
+      "currency": "GBP",
+      "platform": "stripe",
+      "status": "succeeded",
+      "referenceId": "ch_3NqVLiveTest99",
+      "description": "Third-Party Platform Payment (STRIPE)",
+      "eventType": "external.payment",
+      "rawPayload": {
+        "provider": "stripe",
+        "clientName": "Elena Rostova",
+        "clientEmail": "elena.rostova@cyberdyn.com",
+        "amount": 280,
+        "currency": "GBP",
+        "referenceId": "ch_3NqVLiveTest99",
+        "package": "12 Sessions a month"
+      },
+      "createdAt": "2026-10-08T18:17:43.280Z"
+    },
+    {
+      "id": "tx_stripe_001",
+      "bookingId": "469e4b90-4eec-420c-aae1-7ef14a02f97f",
+      "clientName": "Alfred",
+      "clientEmail": "kwesifredd@gmail.com",
+      "amount": 280,
+      "currency": "GBP",
+      "platform": "stripe",
+      "status": "succeeded",
+      "referenceId": "pi_3NqV12LkdIwHu7ix1gL8",
+      "description": "12 Sessions a month - Online Booking Checkout",
+      "eventType": "checkout.session.completed",
+      "createdAt": "2026-10-07T16:26:16.127Z"
+    },
+    {
+      "id": "tx_paypal_002",
+      "bookingId": "c19b22e1-77ad-45fc-9a1b-3f44e883820a",
+      "clientName": "Marcus Kane",
+      "clientEmail": "m.kane@apexlogistics.co.uk",
+      "amount": 30,
+      "currency": "GBP",
+      "platform": "paypal",
+      "status": "succeeded",
+      "referenceId": "PAYID-MN67890123",
+      "description": "Single Session Assessment - PayPal Express",
+      "eventType": "PAYMENT.CAPTURE.COMPLETED",
+      "createdAt": "2026-10-08T14:35:10.000Z"
+    }
+  ],
+  "inquiries": [
+    {
+      "id": "inq_001",
+      "name": "Sarah Jenkins",
+      "email": "sarah.j@venturecapital.com",
+      "phone": "+44 7123 999888",
+      "objective": "Looking for high-intensity executive 1-on-1 coaching 3x weekly. Needs schedule flexibility due to frequent flights.",
+      "status": "new",
+      "createdAt": "2026-10-08T09:15:22.000Z"
+    },
+    {
+      "id": "inq_002",
+      "name": "David Vance",
+      "email": "dvance@techcorplabs.io",
+      "phone": "+44 7890 123789",
+      "objective": "Interested in the 12-session transformation protocol and custom nutrition plan for marathon preparation.",
+      "status": "contacted",
+      "createdAt": "2026-10-07T18:40:11.000Z"
     }
   ],
   "settings": {
@@ -20,7 +324,22 @@
       "15:00",
       "16:00",
       "17:00"
-    ]
+    ],
+    "gateway": {
+      "stripeEnabled": true,
+      "stripePublishableKey": "pk_test_51MockStripePublishableKey99Xyz",
+      "stripeSecretKey": "sk_test_51MockStripeSecretKey99Xyz",
+      "stripeWebhookSecret": "whsec_mockWebhookSigningSecret123",
+      "paypalEnabled": true,
+      "paypalClientId": "client_id_paypal_demo_sandbox",
+      "paypalWebhookId": "wh_paypal_demo_sandbox",
+      "paystackEnabled": true,
+      "paystackPublicKey": "pk_test_paystack_sample_key_123",
+      "paystackSecretKey": "sk_test_paystack_sample_secret_456",
+      "paystackWebhookSecret": "",
+      "webhookSecretKey": "wh_sec_tthept_live_9a8b7c6d5e",
+      "currency": "GBP"
+    }
   },
   "content": {
     "heroTitle": "Unlock Your True Potential",

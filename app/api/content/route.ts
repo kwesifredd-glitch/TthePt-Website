@@ -10,7 +10,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const updated = db.updateContent(body);
         return NextResponse.json(updated);
-    } catch (e) {
+    } catch {
         return NextResponse.json({ error: 'Failed to update content' }, { status: 500 });
     }
 }

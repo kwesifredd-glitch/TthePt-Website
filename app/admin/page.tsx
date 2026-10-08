@@ -1,206 +1,531 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Lock, Calendar, User, Mail, Clock, LayoutDashboard, Settings, LogOut, Search, Filter } from "lucide-react";
-import { format } from "date-fns";
-import { Booking } from "@/lib/store";
-import { ContentManager } from "@/components/admin/ContentManager";
+import {
+    Lock,
+    LayoutDashboard,
+    Calendar,
+    CreditCard,
+    MessageSquare,
+    Clock,
+    LogOut,
+    RefreshCw,
+    Shield
+} from "lucide-react";
+import { Booking, Payment, Inquiry, BookingStatus } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { ToastContainer, ToastMessage } from "@/components/admin/Toast";
+import { AdminOverview } from "@/components/admin/AdminOverview";
+import { AdminBookings } from "@/components/admin/AdminBookings";
+import { AdminPayments } from "@/components/admin/AdminPayments";
+import { AdminInquiries } from "@/components/admin/AdminInquiries";
+import { AdminSchedule } from "@/components/admin/AdminSchedule";
+import { NewBookingModal } from "@/components/admin/NewBookingModal";
+import { RecordPaymentModal } from "@/components/admin/RecordPaymentModal";
+import { ClientDetailsModal } from "@/components/admin/ClientDetailsModal";
+
+type AdminTab = "overview" | "bookings" | "payments" | "inquiries" | "schedule";
 
 export default function AdminPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState("");
+    const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+
+    // Data State
     const [bookings, setBookings] = useState<Booking[]>([]);
+    const [payments, setPayments] = useState<Payment[]>([]);
+    const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+
+    const [availableHours, setAvailableHours] = useState<string[]>([]);
+    const [stats, setStats] = useState({
+        totalRevenue: 0,
+        totalBookings: 0,
+        confirmedBookings: 0,
+        paidBookings: 0,
+        pendingPaymentsCount: 0,
+        pendingPaymentAmount: 0,
+        totalInquiries: 0,
+        newInquiries: 0,
+        totalTransactions: 0
+    });
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState<"bookings" | "content">("bookings");
+
+    // Modals
+    const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
+    const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
+    const [selectedBookingForModal, setSelectedBookingForModal] = useState<Booking | null>(null);
+    const [bookingPrefill, setBookingPrefill] = useState<{ name?: string; email?: string; phone?: string; objective?: string } | undefined>(undefined);
+
+    // Toasts
+    const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+    const addToast = (text: string, type: "success" | "error" | "info" = "success") => {
+        const id = `toast_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+        setToasts((prev) => [...prev, { id, text, type }]);
+    };
+
+    const dismissToast = (id: string) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+    };
+
+    const fetchAllData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [bRes, pRes, iRes, sRes] = await Promise.all([
+                fetch("/api/admin/bookings").then((r) => r.json()),
+                fetch("/api/admin/payments").then((r) => r.json()),
+                fetch("/api/admin/inquiries").then((r) => r.json()),
+                fetch("/api/admin/settings").then((r) => r.json())
+            ]);
+
+            if (bRes.bookings) setBookings(bRes.bookings);
+            if (bRes.stats) setStats(bRes.stats);
+            if (pRes.payments) setPayments(pRes.payments);
+            if (iRes.inquiries) setInquiries(iRes.inquiries);
+
+            if (sRes.settings?.availableHours) setAvailableHours(sRes.settings.availableHours);
+        } catch (error) {
+            console.error("Failed to load admin intelligence data", error);
+            addToast("Failed to synchronize database records.", "error");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const stored = sessionStorage.getItem("tthept_admin_auth");
+            if (stored === "true") {
+                setIsAuthenticated(true);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchAllData();
+        }
+    }, [isAuthenticated, fetchAllData]);
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         if (password === "admin123") {
             setIsAuthenticated(true);
-            fetchBookings();
+            sessionStorage.setItem("tthept_admin_auth", "true");
+            addToast("Command Center connection established.", "success");
         } else {
-            alert("Invalid password");
+            addToast("Authentication rejected. Invalid protocol key.", "error");
         }
     };
 
-    const fetchBookings = async () => {
-        setLoading(true);
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+        sessionStorage.removeItem("tthept_admin_auth");
+    };
+
+    // Quick Update Booking Status
+    const handleQuickUpdateStatus = async (id: string, status: BookingStatus) => {
         try {
-            const res = await fetch("/api/admin/bookings");
+            const res = await fetch("/api/admin/bookings", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, status })
+            });
             const data = await res.json();
-            setBookings(data.bookings);
-        } catch (error) {
-            console.error("Failed to fetch bookings", error);
-        } finally {
-            setLoading(false);
+            if (data.success) {
+                setBookings((prev) => prev.map((b) => (b.id === id ? data.booking : b)));
+                if (data.stats) setStats(data.stats);
+                addToast(`Protocol status set to ${status.toUpperCase()}`);
+            }
+        } catch (err) {
+            console.error(err);
+            addToast("Failed to update status", "error");
         }
     };
 
+    // Quick Mark as Paid
+    const handleQuickMarkPaid = async (booking: Booking) => {
+        try {
+            const res = await fetch("/api/admin/bookings", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: booking.id,
+                    paymentStatus: "paid",
+                    paymentMethod: "manual"
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                fetchAllData();
+                addToast(`Marked £${booking.price} as settled for ${booking.name}`);
+            }
+        } catch (err) {
+            console.error(err);
+            addToast("Failed to mark as paid", "error");
+        }
+    };
+
+    // Delete Booking
+    const handleDeleteBooking = async (id: string, name: string) => {
+        if (!confirm(`Confirm purging protocol for ${name}?`)) return;
+        try {
+            const res = await fetch(`/api/admin/bookings?id=${id}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+                setBookings((prev) => prev.filter((b) => b.id !== id));
+                if (data.stats) setStats(data.stats);
+                addToast(`Purged ${name} from roster.`);
+            }
+        } catch (err) {
+            console.error(err);
+            addToast("Failed to delete booking", "error");
+        }
+    };
+
+    // Refund Payment
+    const handleRefundPayment = async (id: string, clientName: string) => {
+        if (!confirm(`Initiate refund record for transaction ${id} (${clientName})?`)) return;
+        try {
+            const res = await fetch("/api/admin/payments", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, status: "refunded" })
+            });
+            const data = await res.json();
+            if (data.success) {
+                fetchAllData();
+                addToast(`Transaction ${id} marked as refunded.`);
+            }
+        } catch (err) {
+            console.error(err);
+            addToast("Failed to refund payment", "error");
+        }
+    };
+
+    // Inquiry Updates
+    const handleUpdateInquiryStatus = async (id: string, status: Inquiry["status"]) => {
+        try {
+            const res = await fetch("/api/admin/inquiries", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, status })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setInquiries((prev) => prev.map((inq) => (inq.id === id ? data.inquiry : inq)));
+                addToast(`Lead marked as ${status.toUpperCase()}`);
+            }
+        } catch (err) {
+            console.error(err);
+            addToast("Failed to update inquiry", "error");
+        }
+    };
+
+    const handleDeleteInquiry = async (id: string, name: string) => {
+        if (!confirm(`Purge lead from ${name}?`)) return;
+        try {
+            const res = await fetch(`/api/admin/inquiries?id=${id}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+                setInquiries((prev) => prev.filter((inq) => inq.id !== id));
+                addToast(`Purged lead from ${name}`);
+            }
+        } catch (err) {
+            console.error(err);
+            addToast("Failed to delete inquiry", "error");
+        }
+    };
+
+    // Convert Lead to Booking
+    const handleConvertToBooking = (inquiry: Inquiry) => {
+        setBookingPrefill({
+            name: inquiry.name,
+            email: inquiry.email,
+            phone: inquiry.phone,
+            objective: inquiry.objective
+        });
+        setIsNewBookingOpen(true);
+    };
+
+    // Copy Payment Link
+    const handleCopyLink = (bookingId: string) => {
+        const url = `${window.location.origin}/checkout/${bookingId}`;
+        navigator.clipboard.writeText(url);
+        addToast("Payment checkout link copied to clipboard!");
+    };
+
+    // CSV Export
+    const handleExportCSV = () => {
+        if (activeTab === "payments") {
+            const headers = "ID,Date,Client,Email,Amount,Currency,Platform,ReferenceID,Status\n";
+            const rows = payments
+                .map(
+                    (p) =>
+                        `"${p.id}","${p.createdAt}","${p.clientName}","${p.clientEmail}",${p.amount},"${p.currency}","${p.platform}","${p.referenceId}","${p.status}"`
+                )
+                .join("\n");
+            const blob = new Blob([headers + rows], { type: "text/csv" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `tthept-payments-${Date.now()}.csv`;
+            link.click();
+            addToast("Payments ledger exported to CSV.");
+        } else {
+            const headers = "ID,Date,Time,Client,Email,Phone,Package,Price,Currency,Status,PaymentStatus,PaymentMethod,PaymentRef,CreatedAt\n";
+            const rows = bookings
+                .map(
+                    (b) =>
+                        `"${b.id}","${b.date}","${b.time}","${b.name}","${b.email}","${b.phone || ""}","${b.package || ""}",${b.price || 30},"${b.currency || "GBP"}","${b.status}","${b.paymentStatus}","${b.paymentMethod || ""}","${b.paymentRef || ""}","${b.createdAt}"`
+                )
+                .join("\n");
+            const blob = new Blob([headers + rows], { type: "text/csv" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `tthept-signups-${Date.now()}.csv`;
+            link.click();
+            addToast("Client signups exported to CSV.");
+        }
+    };
+
+    // Login Screen
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden">
-                {/* Background Decor */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/20 blur-[120px] rounded-full"></div>
+            <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden text-white selection:bg-primary selection:text-white">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/20 blur-[130px] rounded-full pointer-events-none"></div>
 
-                <Card className="w-full max-w-md bg-zinc-900/50 border-white/5 backdrop-blur-xl relative z-10 shadow-2xl">
-                    <CardHeader className="text-center pb-8">
-                        <div className="mx-auto bg-primary/10 p-5 rounded-3xl w-fit mb-6 border border-primary/20">
+                <Card className="w-full max-w-md bg-zinc-950/80 border-white/10 backdrop-blur-2xl relative z-10 shadow-2xl p-2 rounded-[2.5rem]">
+                    <CardHeader className="text-center pb-8 pt-8">
+                        <div className="mx-auto bg-primary/10 p-5 rounded-3xl w-fit mb-4 border border-primary/20 shadow-[0_0_30px_rgba(255,77,0,0.3)]">
                             <Lock className="h-10 w-10 text-primary" />
                         </div>
+                        <div className="inline-flex items-center gap-2 bg-white/5 text-gray-400 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mx-auto mb-2 border border-white/10">
+                            <Shield className="h-3 w-3 text-primary" /> Level 4 Clearance
+                        </div>
                         <CardTitle className="text-3xl font-black uppercase italic tracking-tighter text-white">System Access</CardTitle>
-                        <CardDescription className="text-gray-500 font-medium">Authentication required for command center.</CardDescription>
+                        <CardDescription className="text-gray-400 font-medium text-xs mt-1">Authentication required for command & billing portal.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pb-8">
                         <form onSubmit={handleLogin} className="space-y-6">
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Protocol Key</label>
                                 <Input
                                     type="password"
                                     placeholder="••••••••"
-                                    className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/10 text-center text-2xl tracking-[0.5em]"
+                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary font-bold placeholder:text-white/10 text-center text-2xl tracking-[0.4em] text-white"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
-                            <Button type="submit" className="w-full h-14 rounded-xl bg-primary hover:bg-orange-600 text-white font-black uppercase tracking-widest transition-all">
+                            <Button
+                                type="submit"
+                                className="w-full h-14 rounded-2xl bg-primary hover:bg-orange-600 text-white font-black uppercase tracking-widest transition-all cursor-pointer shadow-[0_10px_30px_rgba(255,77,0,0.3)]"
+                            >
                                 Establish Connection
                             </Button>
                         </form>
-                        <p className="text-[10px] text-center text-white/5 mt-8 font-black uppercase tracking-widest">Encrypted Session</p>
+                        <p className="text-[10px] text-center text-gray-600 mt-6 font-mono font-bold uppercase tracking-widest">
+                            Encrypted 256-Bit SSL Gateway
+                        </p>
                     </CardContent>
                 </Card>
+
+                <ToastContainer toasts={toasts} onDismiss={dismissToast} />
             </div>
         );
     }
 
+    const navigationItems: Array<{ id: AdminTab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number }> = [
+        { id: "overview", label: "Command Center", icon: LayoutDashboard },
+        { id: "bookings", label: "Client Signups", icon: Calendar, badge: stats.totalBookings },
+        { id: "payments", label: "Payments Ledger", icon: CreditCard, badge: stats.totalTransactions },
+        { id: "inquiries", label: "Website Leads", icon: MessageSquare, badge: stats.newInquiries || undefined },
+        { id: "schedule", label: "Daily Schedule", icon: Clock },
+    ];
+
     return (
-        <div className="flex flex-col min-h-screen bg-black text-white">
+        <div className="flex flex-col min-h-screen bg-black text-white selection:bg-primary selection:text-white">
             <Navbar />
 
-            <main className="flex-1 pt-32 pb-20">
+            <main className="flex-1 pt-32 pb-24">
                 <div className="container-custom">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+                    {/* Top Executive Header */}
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6 border-b border-white/10 pb-8">
                         <div>
-                            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase mb-4 border border-primary/20">
+                            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase mb-3 border border-primary/20">
                                 <LayoutDashboard className="h-3 w-3" />
-                                Command Center
+                                Central Intelligence Portal
                             </div>
-                            <h1 className="text-5xl font-black italic uppercase tracking-tighter">Operational <span className="text-primary not-italic">Data</span></h1>
+                            <h1 className="text-4xl sm:text-5xl font-black italic uppercase tracking-tighter">
+                                Tactical <span className="text-primary not-italic">Command & Finance</span>
+                            </h1>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <Button variant="outline" className="h-12 border-white/10 text-white font-black uppercase tracking-widest text-xs hover:bg-white hover:text-black" onClick={() => setIsAuthenticated(false)}>
-                                <LogOut className="h-4 w-4 mr-2" /> End Session
+
+                        <div className="flex items-center gap-3">
+                            <Button
+                                onClick={fetchAllData}
+                                disabled={loading}
+                                className="h-11 px-4 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-gray-200 font-black uppercase tracking-widest text-xs cursor-pointer flex items-center gap-2"
+                            >
+                                <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+                                <span>Sync</span>
+                            </Button>
+
+                            <Button
+                                onClick={handleLogout}
+                                className="h-11 px-4 rounded-xl border border-white/20 bg-white/5 text-gray-200 hover:text-white hover:bg-white/10 font-black uppercase tracking-widest text-xs cursor-pointer flex items-center gap-2"
+                            >
+                                <LogOut className="h-3.5 w-3.5 text-primary" />
+                                <span>Disconnect</span>
                             </Button>
                         </div>
                     </div>
 
-                    <div className="grid lg:grid-cols-12 gap-12">
-                        {/* Sidebar */}
-                        <aside className="lg:col-span-3 space-y-2">
-                            {[
-                                { id: "bookings", label: "Protocol Log", icon: Calendar },
-                                { id: "content", label: "Intel Manager", icon: Settings },
-                            ].map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    className={cn(
-                                        "w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all font-black uppercase tracking-widest text-xs border text-left",
-                                        activeTab === tab.id
-                                            ? "bg-primary border-primary text-white shadow-[0_5px_15px_rgba(255,77,0,0.3)] scale-[1.02]"
-                                            : "bg-white/5 border-transparent text-gray-500 hover:text-white hover:bg-white/10"
-                                    )}
-                                >
-                                    <tab.icon className="h-4 w-4" />
-                                    {tab.label}
-                                </button>
-                            ))}
+                    <div className="grid lg:grid-cols-12 gap-8 items-start">
+                        {/* Sidebar Navigation */}
+                        <aside className="lg:col-span-3 space-y-2 sticky top-28 z-20">
+                            {navigationItems.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = activeTab === item.id;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => {
+                                            setActiveTab(item.id);
+                                            window.scrollTo({ top: 0, behavior: "smooth" });
+                                        }}
+                                        className={cn(
+                                            "w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all font-black uppercase tracking-wider text-xs border text-left cursor-pointer",
+                                            isActive
+                                                ? "bg-primary border-primary text-white shadow-[0_5px_20px_rgba(255,77,0,0.35)] scale-[1.02]"
+                                                : "bg-zinc-950 border-white/5 text-gray-400 hover:text-white hover:bg-zinc-900"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Icon className="h-4 w-4" />
+                                            <span>{item.label}</span>
+                                        </div>
+                                        {item.badge !== undefined && item.badge > 0 && (
+                                            <span
+                                                className={cn(
+                                                    "text-[9px] font-black px-2 py-0.5 rounded-full",
+                                                    isActive ? "bg-black/30 text-white" : "bg-primary/20 text-primary"
+                                                )}
+                                            >
+                                                {item.badge}
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </aside>
 
-                        {/* Content Area */}
-                        <div className="lg:col-span-9">
-                            <Card className="bg-zinc-950 border-white/5 min-h-[600px] shadow-2xl overflow-hidden">
-                                {activeTab === "bookings" ? (
-                                    <div className="p-0">
-                                        <div className="p-8 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-                                            <h2 className="text-2xl font-black uppercase italic tracking-tight">Active Bookings</h2>
-                                            <div className="flex items-center gap-3 w-full md:w-auto">
-                                                <div className="relative flex-1 md:w-64">
-                                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                                                    <Input className="pl-11 h-11 bg-white/5 border-white/10 text-sm font-bold placeholder:text-gray-600 rounded-xl" placeholder="Search signals..." />
-                                                </div>
-                                                <Button variant="outline" className="h-11 border-white/10 hover:bg-white/5 aspect-square p-0 rounded-xl">
-                                                    <Filter className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
+                        {/* Main View Area */}
+                        <div className="lg:col-span-9 min-h-[600px]">
+                            {activeTab === "overview" && (
+                                <AdminOverview
+                                    stats={stats}
+                                    bookings={bookings}
+                                    payments={payments}
+                                    inquiries={inquiries}
+                                    onOpenNewBooking={() => {
+                                        setBookingPrefill(undefined);
+                                        setIsNewBookingOpen(true);
+                                    }}
+                                    onOpenRecordPayment={() => setIsRecordPaymentOpen(true)}
+                                    onSelectTab={(tab) => setActiveTab(tab)}
+                                    onSelectBooking={(b) => setSelectedBookingForModal(b)}
+                                    onExportCSV={handleExportCSV}
+                                />
+                            )}
 
-                                        <div className="p-8">
-                                            {loading ? (
-                                                <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                                                    <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Decrypting Records...</p>
-                                                </div>
-                                            ) : bookings.length === 0 ? (
-                                                <div className="text-center py-32 border-2 border-dashed border-white/5 rounded-[2rem]">
-                                                    <p className="text-gray-600 font-black uppercase tracking-[0.3em] text-sm">No Active Protocols</p>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-4">
-                                                    {bookings.map((booking: any) => (
-                                                        <div key={booking.id} className="group flex flex-col md:flex-row justify-between items-start md:items-center p-6 rounded-[1.5rem] bg-white/5 border border-white/5 hover:border-primary/30 transition-all duration-300">
-                                                            <div className="flex items-center gap-6">
-                                                                <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black text-xl italic group-hover:bg-primary group-hover:text-white transition-all">
-                                                                    {booking.name.charAt(0)}
-                                                                </div>
-                                                                 <div className="space-y-1">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <p className="text-xl font-black uppercase italic tracking-tight text-white">{booking.name}</p>
-                                                                        {booking.package && (
-                                                                            <span className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
-                                                                                {booking.package} (£{booking.price})
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                    <p className="text-sm font-bold text-gray-500">{booking.email}</p>
-                                                                </div>
-                                                            </div>
+                            {activeTab === "bookings" && (
+                                <AdminBookings
+                                    bookings={bookings}
+                                    onOpenNewBooking={() => {
+                                        setBookingPrefill(undefined);
+                                        setIsNewBookingOpen(true);
+                                    }}
+                                    onSelectBooking={(b) => setSelectedBookingForModal(b)}
+                                    onQuickUpdateStatus={handleQuickUpdateStatus}
+                                    onQuickMarkPaid={handleQuickMarkPaid}
+                                    onDeleteBooking={handleDeleteBooking}
+                                    onExportCSV={handleExportCSV}
+                                    onCopyLink={handleCopyLink}
+                                />
+                            )}
 
-                                                            <div className="mt-6 md:mt-0 flex flex-col md:items-end gap-2">
-                                                                <div className="flex items-center gap-3 bg-black/50 px-4 py-2 rounded-full border border-white/5">
-                                                                    <Calendar className="h-3 w-3 text-primary" />
-                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white">{format(new Date(booking.date.includes("T") ? booking.date : booking.date + "T00:00:00"), "MMM dd, yyyy")}</span>
-                                                                </div>
-                                                                <div className="flex items-center gap-3 bg-black/50 px-4 py-2 rounded-full border border-white/5">
-                                                                    <Clock className="h-3 w-3 text-primary" />
-                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white">{booking.time}</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="p-8">
-                                        <ContentManager />
-                                    </div>
-                                )}
-                            </Card>
+                            {activeTab === "payments" && (
+                                <AdminPayments
+                                    payments={payments}
+                                    onOpenRecordPayment={() => setIsRecordPaymentOpen(true)}
+                                    onRefundPayment={handleRefundPayment}
+                                    onExportCSV={handleExportCSV}
+                                />
+                            )}
+
+                            {activeTab === "inquiries" && (
+                                <AdminInquiries
+                                    inquiries={inquiries}
+                                    onConvertToBooking={handleConvertToBooking}
+                                    onUpdateStatus={handleUpdateInquiryStatus}
+                                    onDeleteInquiry={handleDeleteInquiry}
+                                />
+                            )}
+
+                            {activeTab === "schedule" && (
+                                <AdminSchedule
+                                    availableHours={availableHours}
+                                    onSave={(h) => setAvailableHours(h)}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
             </main>
 
+            {/* Modals */}
+            <NewBookingModal
+                isOpen={isNewBookingOpen}
+                onClose={() => setIsNewBookingOpen(false)}
+                prefill={bookingPrefill}
+                onSuccess={(msg) => {
+                    fetchAllData();
+                    addToast(msg);
+                }}
+            />
+
+            <RecordPaymentModal
+                isOpen={isRecordPaymentOpen}
+                onClose={() => setIsRecordPaymentOpen(false)}
+                bookings={bookings}
+                onSuccess={(msg) => {
+                    fetchAllData();
+                    addToast(msg);
+                }}
+            />
+
+            <ClientDetailsModal
+                booking={selectedBookingForModal}
+                isOpen={!!selectedBookingForModal}
+                onClose={() => setSelectedBookingForModal(null)}
+                onUpdate={(b, msg) => {
+                    setBookings((prev) => prev.map((item) => (item.id === b.id ? b : item)));
+                    addToast(msg);
+                }}
+                onDelete={(id, msg) => {
+                    setBookings((prev) => prev.filter((item) => item.id !== id));
+                    addToast(msg);
+                }}
+            />
+
+            <ToastContainer toasts={toasts} onDismiss={dismissToast} />
             <Footer />
         </div>
     );
 }
-
