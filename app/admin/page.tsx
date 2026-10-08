@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,7 +14,8 @@ import {
     Clock,
     LogOut,
     RefreshCw,
-    Shield
+    Shield,
+    ExternalLink
 } from "lucide-react";
 import { Booking, Payment, Inquiry, BookingStatus } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -296,19 +296,19 @@ export default function AdminPage() {
     // Login Screen
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden text-white selection:bg-primary selection:text-white">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/20 blur-[130px] rounded-full pointer-events-none"></div>
+            <div className="min-h-screen flex items-center justify-center bg-slate-100 relative overflow-hidden text-slate-900 selection:bg-primary selection:text-white">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 blur-[130px] rounded-full pointer-events-none"></div>
 
-                <Card className="w-full max-w-md bg-zinc-950/80 border-white/10 backdrop-blur-2xl relative z-10 shadow-2xl p-2 rounded-[2.5rem]">
+                <Card className="w-full max-w-md bg-white border-slate-200 relative z-10 shadow-xl p-2 rounded-[2.5rem]">
                     <CardHeader className="text-center pb-8 pt-8">
-                        <div className="mx-auto bg-primary/10 p-5 rounded-3xl w-fit mb-4 border border-primary/20 shadow-[0_0_30px_rgba(255,77,0,0.3)]">
+                        <div className="mx-auto bg-primary/10 p-5 rounded-3xl w-fit mb-4 border border-primary/20 shadow-md shadow-orange-500/10">
                             <Lock className="h-10 w-10 text-primary" />
                         </div>
-                        <div className="inline-flex items-center gap-2 bg-white/5 text-gray-400 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mx-auto mb-2 border border-white/10">
+                        <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mx-auto mb-2 border border-slate-200">
                             <Shield className="h-3 w-3 text-primary" /> Level 4 Clearance
                         </div>
-                        <CardTitle className="text-3xl font-black uppercase italic tracking-tighter text-white">System Access</CardTitle>
-                        <CardDescription className="text-gray-400 font-medium text-xs mt-1">Authentication required for command & billing portal.</CardDescription>
+                        <CardTitle className="text-3xl font-black uppercase italic tracking-tighter text-zinc-950">System Access</CardTitle>
+                        <CardDescription className="text-slate-500 font-medium text-xs mt-1">Authentication required for command & billing portal.</CardDescription>
                     </CardHeader>
                     <CardContent className="pb-8">
                         <form onSubmit={handleLogin} className="space-y-6">
@@ -317,19 +317,19 @@ export default function AdminPage() {
                                 <Input
                                     type="password"
                                     placeholder="••••••••"
-                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary font-bold placeholder:text-white/10 text-center text-2xl tracking-[0.4em] text-white"
+                                    className="h-14 bg-slate-50 border-slate-300 rounded-2xl focus:ring-primary focus:border-primary font-bold placeholder:text-slate-300 text-center text-2xl tracking-[0.4em] text-zinc-950"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
                             <Button
                                 type="submit"
-                                className="w-full h-14 rounded-2xl bg-primary hover:bg-orange-600 text-white font-black uppercase tracking-widest transition-all cursor-pointer shadow-[0_10px_30px_rgba(255,77,0,0.3)]"
+                                className="w-full h-14 rounded-2xl bg-primary hover:bg-orange-600 text-white font-black uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-orange-500/25"
                             >
                                 Establish Connection
                             </Button>
                         </form>
-                        <p className="text-[10px] text-center text-gray-600 mt-6 font-mono font-bold uppercase tracking-widest">
+                        <p className="text-[10px] text-center text-slate-400 mt-6 font-mono font-bold uppercase tracking-widest">
                             Encrypted 256-Bit SSL Gateway
                         </p>
                     </CardContent>
@@ -349,46 +349,71 @@ export default function AdminPage() {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-black text-white selection:bg-primary selection:text-white">
-            <Navbar />
+        <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 selection:bg-primary selection:text-white">
+            {/* Dedicated Light Admin Header */}
+            <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+                <div className="container-custom py-3.5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Link href="/" className="group flex items-center gap-2">
+                            <span className="text-2xl font-black italic tracking-tighter text-zinc-950 group-hover:text-primary transition-colors">
+                                TTHE<span className="text-primary not-italic">PT</span>
+                            </span>
+                        </Link>
+                        <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+                        <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                            Staff Operations Portal
+                        </span>
+                    </div>
 
-            <main className="flex-1 pt-32 pb-24">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <Link
+                            href="/"
+                            target="_blank"
+                            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:text-zinc-950 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200"
+                        >
+                            <span>Live Website</span>
+                            <ExternalLink className="h-3 w-3" />
+                        </Link>
+                        <Button
+                            onClick={fetchAllData}
+                            disabled={loading}
+                            className="h-9 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-800 font-bold uppercase tracking-wider text-xs shadow-xs cursor-pointer flex items-center gap-1.5"
+                        >
+                            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+                            <span>Sync</span>
+                        </Button>
+                        <Button
+                            onClick={handleLogout}
+                            className="h-9 px-3.5 rounded-xl border border-slate-200 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 font-bold uppercase tracking-wider text-xs cursor-pointer flex items-center gap-1.5 transition-colors"
+                        >
+                            <LogOut className="h-3.5 w-3.5 text-primary" />
+                            <span>Disconnect</span>
+                        </Button>
+                    </div>
+                </div>
+            </header>
+
+            <main className="flex-1 py-10 sm:py-12">
                 <div className="container-custom">
                     {/* Top Executive Header */}
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6 border-b border-white/10 pb-8">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4 border-b border-slate-200 pb-6">
                         <div>
                             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase mb-3 border border-primary/20">
                                 <LayoutDashboard className="h-3 w-3" />
                                 Central Intelligence Portal
                             </div>
-                            <h1 className="text-4xl sm:text-5xl font-black italic uppercase tracking-tighter">
+                            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-zinc-950">
                                 Tactical <span className="text-primary not-italic">Command & Finance</span>
                             </h1>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <Button
-                                onClick={fetchAllData}
-                                disabled={loading}
-                                className="h-11 px-4 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-gray-200 font-black uppercase tracking-widest text-xs cursor-pointer flex items-center gap-2"
-                            >
-                                <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-                                <span>Sync</span>
-                            </Button>
-
-                            <Button
-                                onClick={handleLogout}
-                                className="h-11 px-4 rounded-xl border border-white/20 bg-white/5 text-gray-200 hover:text-white hover:bg-white/10 font-black uppercase tracking-widest text-xs cursor-pointer flex items-center gap-2"
-                            >
-                                <LogOut className="h-3.5 w-3.5 text-primary" />
-                                <span>Disconnect</span>
-                            </Button>
+                            <p className="text-slate-500 text-xs font-medium mt-1">
+                                Operations console for trainee signups, payments ledger, and schedule management.
+                            </p>
                         </div>
                     </div>
 
                     <div className="grid lg:grid-cols-12 gap-8 items-start">
                         {/* Sidebar Navigation */}
-                        <aside className="lg:col-span-3 space-y-2 sticky top-28 z-20">
+                        <aside className="lg:col-span-3 space-y-2 sticky top-24 z-20">
                             {navigationItems.map((item) => {
                                 const Icon = item.icon;
                                 const isActive = activeTab === item.id;
@@ -402,8 +427,8 @@ export default function AdminPage() {
                                         className={cn(
                                             "w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all font-black uppercase tracking-wider text-xs border text-left cursor-pointer",
                                             isActive
-                                                ? "bg-primary border-primary text-white shadow-[0_5px_20px_rgba(255,77,0,0.35)] scale-[1.02]"
-                                                : "bg-zinc-950 border-white/5 text-gray-400 hover:text-white hover:bg-zinc-900"
+                                                ? "bg-primary border-primary text-white shadow-md shadow-orange-500/25 scale-[1.02]"
+                                                : "bg-white border-slate-200 text-slate-700 hover:text-zinc-950 hover:bg-slate-100 shadow-xs"
                                         )}
                                     >
                                         <div className="flex items-center gap-3">
@@ -414,7 +439,7 @@ export default function AdminPage() {
                                             <span
                                                 className={cn(
                                                     "text-[9px] font-black px-2 py-0.5 rounded-full",
-                                                    isActive ? "bg-black/30 text-white" : "bg-primary/20 text-primary"
+                                                    isActive ? "bg-black/25 text-white" : "bg-primary/10 text-primary"
                                                 )}
                                             >
                                                 {item.badge}
@@ -525,7 +550,12 @@ export default function AdminPage() {
             />
 
             <ToastContainer toasts={toasts} onDismiss={dismissToast} />
-            <Footer />
+            <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs font-medium text-slate-500">
+                <div className="container-custom flex flex-col sm:flex-row items-center justify-between gap-2">
+                    <p>© {new Date().getFullYear()} TthePT Performance. Staff Operations Portal.</p>
+                    <p className="font-mono text-[11px] text-slate-400">Encrypted 256-Bit SSL Session • Operations v2.4</p>
+                </div>
+            </footer>
         </div>
     );
 }

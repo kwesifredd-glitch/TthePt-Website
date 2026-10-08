@@ -52,14 +52,14 @@ export function AdminSchedule({ availableHours, onSave }: AdminScheduleProps) {
     };
 
     return (
-        <div className="bg-zinc-950 border border-white/10 rounded-[2.5rem] p-6 sm:p-10 space-y-8">
+        <div className="bg-white border border-slate-200 rounded-[2.5rem] p-6 sm:p-10 space-y-8 shadow-sm text-slate-900">
             <div>
                 <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase mb-2 border border-primary/20">
                     <Clock className="h-3.5 w-3.5" />
                     Operational Capacity
                 </div>
-                <h3 className="text-3xl font-black uppercase italic tracking-tight text-white">Daily Training Slots</h3>
-                <p className="text-gray-400 text-xs mt-1">Configure client appointment availability shown on the booking calendar.</p>
+                <h3 className="text-3xl font-black uppercase italic tracking-tight text-zinc-950">Daily Training Slots</h3>
+                <p className="text-slate-500 text-xs mt-1">Configure client appointment availability shown on the booking calendar.</p>
             </div>
 
             {/* Add New Hour */}
@@ -68,11 +68,11 @@ export function AdminSchedule({ availableHours, onSave }: AdminScheduleProps) {
                     type="time"
                     value={newHour}
                     onChange={(e) => setNewHour(e.target.value)}
-                    className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-sm text-white"
+                    className="h-12 bg-slate-50 border-slate-300 rounded-xl font-bold text-sm text-zinc-950 focus:border-primary focus:bg-white"
                 />
                 <Button
                     onClick={handleAddHour}
-                    className="h-12 px-6 rounded-xl bg-primary hover:bg-orange-600 text-white font-black uppercase tracking-widest text-xs shrink-0 cursor-pointer"
+                    className="h-12 px-6 rounded-xl bg-primary hover:bg-orange-600 text-white font-black uppercase tracking-widest text-xs shrink-0 cursor-pointer shadow-sm"
                 >
                     <Plus className="h-4 w-4 mr-1.5" /> Add Slot
                 </Button>
@@ -80,18 +80,18 @@ export function AdminSchedule({ availableHours, onSave }: AdminScheduleProps) {
 
             {/* Current Active Hours */}
             <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Active Daily Slots</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block">Active Daily Slots</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                     {hours.map((h) => (
                         <div
                             key={h}
-                            className="p-3 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between group hover:border-primary/40 transition-all"
+                            className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between group hover:border-primary/40 hover:bg-white shadow-xs transition-all"
                         >
-                            <span className="font-mono font-bold text-sm text-white">{h} BST</span>
+                            <span className="font-mono font-bold text-sm text-zinc-950">{h} BST</span>
                             <button
                                 type="button"
                                 onClick={() => handleRemoveHour(h)}
-                                className="text-gray-600 group-hover:text-red-400 p-1 hover:bg-white/5 rounded-lg transition-colors"
+                                className="text-slate-400 group-hover:text-red-500 p-1 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                             >
                                 <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -103,7 +103,7 @@ export function AdminSchedule({ availableHours, onSave }: AdminScheduleProps) {
             <Button
                 onClick={handleSaveSchedule}
                 disabled={saving}
-                className="w-full h-14 rounded-xl bg-white hover:bg-gray-200 text-black font-black uppercase tracking-widest text-xs transition-all cursor-pointer shadow-xl"
+                className="w-full h-14 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase tracking-widest text-xs transition-all cursor-pointer shadow-md"
             >
                 {saving ? "Synchronizing Capacity..." : "Save Daily Training Slots"}
             </Button>

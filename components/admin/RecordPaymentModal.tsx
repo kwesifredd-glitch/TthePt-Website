@@ -75,11 +75,11 @@ export function RecordPaymentModal({ isOpen, onClose, onSuccess, bookings }: Rec
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="bg-zinc-950 border border-white/10 rounded-[2.5rem] w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-10 relative text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="bg-white border border-slate-200 rounded-[2.5rem] w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-10 relative text-slate-900">
                 <button
                     onClick={onClose}
-                    className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                    className="absolute top-6 right-6 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-zinc-950 transition-colors cursor-pointer"
                 >
                     <X className="h-5 w-5" />
                 </button>
@@ -89,8 +89,8 @@ export function RecordPaymentModal({ isOpen, onClose, onSuccess, bookings }: Rec
                         <CreditCard className="h-3 w-3" />
                         Third-Party Inflow
                     </div>
-                    <h2 className="text-3xl font-black uppercase italic tracking-tight">Record Payment</h2>
-                    <p className="text-gray-400 text-xs mt-1">Register external remittance from Stripe, PayPal, Square, or Bank Settlement.</p>
+                    <h2 className="text-3xl font-black uppercase italic tracking-tight text-zinc-950">Record Payment</h2>
+                    <p className="text-slate-500 text-xs mt-1">Register external remittance from Stripe, PayPal, Square, or Bank Settlement.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -102,11 +102,11 @@ export function RecordPaymentModal({ isOpen, onClose, onSuccess, bookings }: Rec
                         <select
                             value={selectedBookingId}
                             onChange={(e) => handleSelectBooking(e.target.value)}
-                            className="w-full h-12 bg-zinc-900 border border-white/10 rounded-xl px-3 font-bold text-sm text-white focus:outline-none focus:border-primary"
+                            className="w-full h-12 bg-white border border-slate-300 rounded-xl px-3 font-bold text-sm text-zinc-950 focus:outline-none focus:border-primary shadow-xs"
                         >
-                            <option value="none">— Direct Ledger Entry (No Booking Associated) —</option>
+                            <option value="none" className="bg-white text-zinc-950">— Direct Ledger Entry (No Booking Associated) —</option>
                             {bookings.map((b) => (
-                                <option key={b.id} value={b.id}>
+                                <option key={b.id} value={b.id} className="bg-white text-zinc-950">
                                     {b.name} ({b.email}) - {b.package} (£{b.price}) [{b.paymentStatus.toUpperCase()}]
                                 </option>
                             ))}
@@ -115,7 +115,7 @@ export function RecordPaymentModal({ isOpen, onClose, onSuccess, bookings }: Rec
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
                                 <User className="h-3.5 w-3.5 text-primary" /> Client Name
                             </label>
                             <Input
@@ -123,12 +123,12 @@ export function RecordPaymentModal({ isOpen, onClose, onSuccess, bookings }: Rec
                                 value={clientName}
                                 onChange={(e) => setClientName(e.target.value)}
                                 placeholder="E.g. Alfred Kwesi"
-                                className="h-12 bg-white/5 border-white/10 font-bold"
+                                className="h-12 bg-slate-50 border-slate-300 rounded-xl font-bold text-zinc-950 focus:border-primary focus:bg-white"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
                                 <Mail className="h-3.5 w-3.5 text-primary" /> Client Email
                             </label>
                             <Input
@@ -137,7 +137,7 @@ export function RecordPaymentModal({ isOpen, onClose, onSuccess, bookings }: Rec
                                 value={clientEmail}
                                 onChange={(e) => setClientEmail(e.target.value)}
                                 placeholder="alfred@domain.com"
-                                className="h-12 bg-white/5 border-white/10 font-bold"
+                                className="h-12 bg-slate-50 border-slate-300 rounded-xl font-bold text-zinc-950 focus:border-primary focus:bg-white"
                             />
                         </div>
                     </div>
@@ -152,46 +152,46 @@ export function RecordPaymentModal({ isOpen, onClose, onSuccess, bookings }: Rec
                                 required
                                 value={amount}
                                 onChange={(e) => setAmount(Number(e.target.value))}
-                                className="h-12 bg-white/5 border-white/10 font-bold text-lg text-primary"
+                                className="h-12 bg-slate-50 border-slate-300 rounded-xl font-bold text-lg text-primary focus:border-primary focus:bg-white"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Currency</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">Currency</label>
                             <select
                                 value={currency}
                                 onChange={(e) => setCurrency(e.target.value)}
-                                className="w-full h-12 bg-zinc-900 border border-white/10 rounded-xl px-3 font-bold text-sm text-white focus:outline-none focus:border-primary"
+                                className="w-full h-12 bg-white border border-slate-300 rounded-xl px-3 font-bold text-sm text-zinc-950 focus:outline-none focus:border-primary shadow-xs"
                             >
-                                <option value="GBP">GBP (£)</option>
-                                <option value="USD">USD ($)</option>
-                                <option value="EUR">EUR (€)</option>
-                                <option value="NGN">NGN (₦)</option>
-                                <option value="GHS">GHS (GH₵)</option>
-                                <option value="ZAR">ZAR (R)</option>
-                                <option value="KES">KES (KSh)</option>
+                                <option value="GBP" className="bg-white text-zinc-950">GBP (£)</option>
+                                <option value="USD" className="bg-white text-zinc-950">USD ($)</option>
+                                <option value="EUR" className="bg-white text-zinc-950">EUR (€)</option>
+                                <option value="NGN" className="bg-white text-zinc-950">NGN (₦)</option>
+                                <option value="GHS" className="bg-white text-zinc-950">GHS (GH₵)</option>
+                                <option value="ZAR" className="bg-white text-zinc-950">ZAR (R)</option>
+                                <option value="KES" className="bg-white text-zinc-950">KES (KSh)</option>
                             </select>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Platform Gateway</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">Platform Gateway</label>
                             <select
                                 value={platform}
                                 onChange={(e) => setPlatform(e.target.value as PaymentPlatform)}
-                                className="w-full h-12 bg-zinc-900 border border-white/10 rounded-xl px-3 font-bold text-sm text-white focus:outline-none focus:border-primary"
+                                className="w-full h-12 bg-white border border-slate-300 rounded-xl px-3 font-bold text-sm text-zinc-950 focus:outline-none focus:border-primary shadow-xs"
                             >
-                                <option value="paystack">Paystack</option>
-                                <option value="stripe">Stripe</option>
-                                <option value="paypal">PayPal</option>
-                                <option value="square">Square</option>
-                                <option value="manual">Bank Transfer</option>
-                                <option value="webhook">External Webhook</option>
+                                <option value="paystack" className="bg-white text-zinc-950">Paystack</option>
+                                <option value="stripe" className="bg-white text-zinc-950">Stripe</option>
+                                <option value="paypal" className="bg-white text-zinc-950">PayPal</option>
+                                <option value="square" className="bg-white text-zinc-950">Square</option>
+                                <option value="manual" className="bg-white text-zinc-950">Bank Transfer</option>
+                                <option value="webhook" className="bg-white text-zinc-950">External Webhook</option>
                             </select>
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
                             <Shield className="h-3.5 w-3.5 text-primary" /> Reference / Transaction ID
                         </label>
                         <Input
@@ -199,17 +199,17 @@ export function RecordPaymentModal({ isOpen, onClose, onSuccess, bookings }: Rec
                             value={referenceId}
                             onChange={(e) => setReferenceId(e.target.value)}
                             placeholder="ch_3N... or PAYID-..."
-                            className="h-12 bg-white/5 border-white/10 font-mono text-sm"
+                            className="h-12 bg-slate-50 border-slate-300 rounded-xl font-mono text-sm text-zinc-950 focus:border-primary focus:bg-white"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Description / Memo</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600">Description / Memo</label>
                         <Input
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="12 Sessions a month settlement"
-                            className="h-12 bg-white/5 border-white/10 font-medium"
+                            className="h-12 bg-slate-50 border-slate-300 rounded-xl font-medium text-zinc-950 focus:border-primary focus:bg-white"
                         />
                     </div>
 
@@ -217,14 +217,14 @@ export function RecordPaymentModal({ isOpen, onClose, onSuccess, bookings }: Rec
                         <Button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 h-14 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-xs cursor-pointer"
+                            className="flex-1 h-14 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-black uppercase tracking-widest text-xs cursor-pointer shadow-xs"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={submitting}
-                            className="flex-1 h-14 rounded-xl bg-primary hover:bg-orange-600 text-white font-black uppercase tracking-widest text-xs shadow-[0_0_25px_rgba(255,77,0,0.4)]"
+                            className="flex-1 h-14 rounded-xl bg-primary hover:bg-orange-600 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-orange-500/25 cursor-pointer"
                         >
                             {submitting ? "Committing..." : "Commit Transaction"}
                         </Button>
