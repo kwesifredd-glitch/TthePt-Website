@@ -5,10 +5,11 @@ import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+// Photos from @_tthept__ on Instagram
 const SLIDES = [
-    { src: "/hero-new.jpg", alt: "Group training session with TthePT", position: "50% 30%" },
-    { src: "/gallery/img-2.jpg", alt: "Client doing a box jump", position: "50% 35%" },
-    { src: "/gallery/img-3.jpg", alt: "Client training on the pull-up rig", position: "50% 25%" },
+    { src: "/instagram/heavy-work.jpg", alt: "Terrence training outdoors", position: "50% 30%" },
+    { src: "/instagram/community-5k.jpg", alt: "Group photo after a TthePT community 5K run", position: "50% 55%" },
+    { src: "/instagram/tough-10k.jpg", alt: "Terrence celebrating with his medal after a 10K", position: "50% 30%" },
 ];
 
 const SLIDE_MS = 6000;

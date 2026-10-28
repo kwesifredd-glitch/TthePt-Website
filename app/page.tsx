@@ -15,12 +15,13 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
+// Photos from @_tthept__ on Instagram
 const galleryItems = [
-  { type: 'image', src: '/gallery/img-1.jpg', title: 'FIELD OPERATOR 01', category: 'CONDITIONING' },
-  { type: 'image', src: '/gallery/img-2.jpg', title: 'FIELD OPERATOR 02', category: 'EXPLOSIVE POWER' },
-  { type: 'image', src: '/gallery/img-3.jpg', title: 'FIELD OPERATOR 03', category: 'POST-ISO ANALYSIS' },
-  { type: 'image', src: '/gallery/img-4.jpg', title: 'PROTOCOL DRILL 01', category: 'KINETIC ANALYSIS' },
-  { type: 'image', src: '/gallery/img-5.jpg', title: 'FIELD OPERATOR 04', category: 'RECOVERY PHASE' },
+  { src: '/instagram/rugby-half.jpg', title: 'Rugby Half Marathon', category: 'Race Day', alt: 'Terrence with his medal after the Rugby Half Marathon' },
+  { src: '/instagram/coventry-10k.jpg', title: 'Coventry 10K', category: 'Race Day', alt: 'Terrence holding his medal after the Coventry 10K' },
+  { src: '/instagram/marathon-finish.jpg', title: 'Medal Earned', category: 'Endurance', alt: 'Terrence after a race with his finisher medal' },
+  { src: '/instagram/lisbon-half.jpg', title: 'Lisbon Half Marathon', category: 'Finish Line', alt: 'Terrence crossing the finish line of the Lisbon Half Marathon' },
+  { src: '/instagram/class-packed.jpg', title: 'Foundry Gym, Coventry', category: 'Tuesday Class', alt: 'The Welcome to Foundry Gym Coventry wall where Terrence runs his Tuesday class' },
 ];
 
 export default function Home() {
@@ -127,11 +128,14 @@ export default function Home() {
           <div className="container-custom">
             <AnimatedSection className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 md:mb-20">
               <div>
-                <h2 className="text-xs font-black text-primary tracking-[0.4em] uppercase mb-3">Visual Evidence</h2>
+                <h2 className="text-xs font-black text-primary tracking-[0.4em] uppercase mb-3">On Instagram</h2>
                 <h3 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter italic uppercase leading-none">THE <span className="text-primary not-italic">VAULT</span></h3>
               </div>
               <p className="text-gray-400 max-w-md font-bold uppercase tracking-widest text-xs md:text-sm italic">
-                Declassified footage of elite personnel during operation-ready conditioning phases.
+                Race days, classes and community runs.{" "}
+                <a href="https://www.instagram.com/_tthept__" target="_blank" rel="noopener noreferrer" className="text-primary not-italic hover:underline">
+                  Follow @_tthept__
+                </a>
               </p>
             </AnimatedSection>
 
@@ -139,7 +143,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[600px] md:h-[750px]">
               {/* Item 1 - Tall */}
               <AnimatedSection direction="left" className="md:col-span-4 h-[350px] md:h-auto relative group overflow-hidden rounded-[2rem] border border-white/10">
-                <Image src={galleryItems[0].src} alt={galleryItems[0].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                <Image src={galleryItems[0].src} alt={galleryItems[0].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
                 <div className="absolute bottom-6 left-6 right-6">
                   <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[0].category}</p>
@@ -150,7 +154,7 @@ export default function Home() {
               {/* Middle Column */}
               <div className="md:col-span-5 grid grid-cols-1 gap-6 md:grid-rows-2">
                 <AnimatedSection direction="up" className="h-[280px] md:h-auto relative group overflow-hidden rounded-[2rem] border border-white/10">
-                  <Image src={galleryItems[1].src} alt={galleryItems[1].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <Image src={galleryItems[1].src} alt={galleryItems[1].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
                   <div className="absolute bottom-6 left-6 right-6">
                     <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[1].category}</p>
@@ -159,7 +163,7 @@ export default function Home() {
                 </AnimatedSection>
 
                 <AnimatedSection direction="up" delay={0.1} className="h-[280px] md:h-auto relative group overflow-hidden rounded-[2rem] border border-white/10">
-                  <Image src={galleryItems[3].src} alt={galleryItems[3].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <Image src={galleryItems[3].src} alt={galleryItems[3].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
                   <div className="absolute bottom-6 left-6 right-6">
                     <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[3].category}</p>
@@ -171,7 +175,7 @@ export default function Home() {
               {/* Right Column */}
               <div className="md:col-span-3 grid grid-cols-1 gap-6 md:grid-rows-3">
                 <AnimatedSection direction="right" className="h-[300px] md:h-auto md:row-span-2 relative group overflow-hidden rounded-[2rem] border border-white/10">
-                  <Image src={galleryItems[2].src} alt={galleryItems[2].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <Image src={galleryItems[2].src} alt={galleryItems[2].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
                   <div className="absolute bottom-6 left-6 right-6">
                     <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[2].category}</p>
@@ -180,7 +184,7 @@ export default function Home() {
                 </AnimatedSection>
 
                 <AnimatedSection direction="right" delay={0.15} className="h-[220px] md:h-auto relative group overflow-hidden rounded-[2rem] border border-white/10">
-                  <Image src={galleryItems[4].src} alt={galleryItems[4].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <Image src={galleryItems[4].src} alt={galleryItems[4].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
                   <div className="absolute bottom-5 left-5 right-5">
                     <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[4].category}</p>
