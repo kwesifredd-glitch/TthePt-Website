@@ -20,7 +20,7 @@ export async function POST(request: Request) {
             createdAt: new Date().toISOString()
         };
 
-        db.addInquiry(newInquiry);
+        await db.addInquiry(newInquiry);
 
         return NextResponse.json({ success: true, inquiry: newInquiry });
     } catch (error) {

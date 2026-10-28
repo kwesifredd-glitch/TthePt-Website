@@ -24,6 +24,7 @@ import {
     Target
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { STRIPE_PAYMENT_LINKS, stripeCheckoutUrl } from "@/lib/payment-links";
 
 const packages = [
     {
@@ -31,6 +32,13 @@ const packages = [
         name: "1-to-1 session",
         price: 30,
         desc: "Single precise tactical deployment.",
+        highlight: false
+    },
+    {
+        id: "biweekly",
+        name: "2 days a week",
+        price: 55,
+        desc: "Strategic dual-day rhythm for sustained progression.",
         highlight: false
     },
     {
@@ -50,7 +58,7 @@ const packages = [
 ];
 
 export default function BookingPage() {
-    const [selectedPackage, setSelectedPackage] = useState(packages[1]);
+    const [selectedPackage, setSelectedPackage] = useState(packages.find(p => p.highlight) || packages[2]);
     const [date, setDate] = useState<Date | undefined>(undefined);
     const [slots, setSlots] = useState<string[]>([]);
     const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
@@ -58,6 +66,7 @@ export default function BookingPage() {
     const [formData, setFormData] = useState({ name: "", email: "" });
     const [isLoading, setIsLoading] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const hasStripeLink = Boolean(STRIPE_PAYMENT_LINKS[selectedPackage.name]);
 
     useEffect(() => {
         setIsMounted(true);
@@ -113,6 +122,18 @@ export default function BookingPage() {
             });
 
             if (res.ok) {
+                const { booking } = await res.json();
+                if (typeof window !== "undefined") {
+                    localStorage.setItem("tthept_client_signed_up", "true");
+                    localStorage.setItem("tthept_client_email", formData.email);
+                    localStorage.setItem("tthept_client_name", formData.name);
+                }
+                // Hand off to Stripe; client_reference_id ties the payment back to this booking
+                const stripeUrl = stripeCheckoutUrl(selectedPackage.name, formData.email, booking.id);
+                if (stripeUrl) {
+                    window.location.href = stripeUrl;
+                    return;
+                }
                 setStep("success");
             } else {
                 alert("Booking failed. Please try again.");
@@ -226,13 +247,13 @@ export default function BookingPage() {
                                                 </p>
                                             </div>
 
-                                            <div className="grid md:grid-cols-3 gap-6 mb-12 md:mb-16">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 md:mb-16">
                                                 {packages.map((pkg) => (
                                                     <button
                                                         key={pkg.id}
                                                         onClick={() => setSelectedPackage(pkg)}
                                                         className={cn(
-                                                            "relative p-6 sm:p-8 rounded-[2rem] border-2 transition-all duration-500 flex flex-col text-left group overflow-hidden active:scale-98",
+                                                            "relative p-6 sm:p-7 lg:p-5 xl:p-7 rounded-[2rem] border-2 transition-all duration-500 flex flex-col text-left group overflow-hidden active:scale-98",
                                                             selectedPackage.id === pkg.id
                                                                 ? "bg-primary/20 border-primary shadow-[0_0_30px_rgba(255,77,0,0.25)] bg-gradient-to-br from-primary/15 to-transparent scale-[1.02]"
                                                                 : "bg-black/40 border-white/10 hover:border-white/20"
@@ -243,7 +264,7 @@ export default function BookingPage() {
                                                         )}
 
                                                         <h4 className={cn(
-                                                            "text-lg sm:text-xl font-black uppercase italic tracking-tight mb-2 transition-colors",
+                                                            "text-lg sm:text-xl lg:text-base xl:text-xl font-black uppercase italic tracking-tight mb-2 transition-colors",
                                                             selectedPackage.id === pkg.id ? "text-primary" : "text-white"
                                                         )}>
                                                             {pkg.name}
@@ -465,16 +486,16 @@ export default function BookingPage() {
                                                 </div>
 
                                                 <form onSubmit={(e) => { e.preventDefault(); handleConfirmBooking(); }} className="md:col-span-7 space-y-6">
-                                                    <div className="space-y-4">
-                                                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Encrypted Payment Gateway</label>
-                                                        <div className="relative group">
-                                                            <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary z-10" />
-                                                            <Input placeholder="4242 4242 4242 4242" defaultValue="4242 4242 4242 4242" readOnly className="h-16 sm:h-20 pl-14 bg-black/40 border-white/10 rounded-2xl font-mono text-lg text-white/50 italic relative z-10" />
+                                                    <div className="p-6 bg-black/40 border border-white/10 rounded-2xl space-y-3">
+                                                        <div className="flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-[0.3em]">
+                                                            <CreditCard className="h-4 w-4" />
+                                                            <span>{hasStripeLink ? "Secure Stripe Checkout" : "Pay In Person"}</span>
                                                         </div>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            <Input placeholder="MM/YY" defaultValue="12/28" readOnly className="h-14 sm:h-16 bg-black/40 border-white/10 rounded-2xl font-mono text-center text-white/40 italic" />
-                                                            <Input placeholder="CVC" defaultValue="123" readOnly className="h-14 sm:h-16 bg-black/40 border-white/10 rounded-2xl font-mono text-center text-white/40 italic" />
-                                                        </div>
+                                                        <p className="text-xs text-gray-400 leading-relaxed">
+                                                            {hasStripeLink
+                                                                ? "You'll be taken to Stripe's secure checkout to pay by card, Apple Pay or Revolut Pay. Your slot is reserved as soon as you continue."
+                                                                : "Your slot will be reserved now and payment is settled with your coach at your first session."}
+                                                        </p>
                                                     </div>
 
                                                     <div className="pt-4 space-y-3">
@@ -483,7 +504,11 @@ export default function BookingPage() {
                                                             disabled={isLoading}
                                                             className="w-full h-16 sm:h-20 rounded-full bg-white text-black font-black uppercase tracking-[0.3em] italic hover:bg-primary hover:text-white transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)] cursor-pointer"
                                                         >
-                                                            {isLoading ? "Synchronizing..." : "ACTIVATE COMMITMENT"}
+                                                            {isLoading
+                                                                ? "Synchronizing..."
+                                                                : hasStripeLink
+                                                                    ? `PAY £${selectedPackage.price}.00 WITH STRIPE ↗`
+                                                                    : "ACTIVATE COMMITMENT"}
                                                         </Button>
                                                         <button
                                                             type="button"
@@ -545,9 +570,17 @@ export default function BookingPage() {
                                                 </div>
                                             </div>
 
-                                            <Button asChild className="h-16 px-12 sm:px-16 rounded-full bg-white text-black font-black uppercase tracking-[0.25em] hover:bg-primary hover:text-white transition-all shadow-xl">
-                                                <Link href="/">Return to Ops Center</Link>
-                                            </Button>
+                                            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-md">
+                                                <Button asChild className="w-full sm:w-auto h-16 px-8 sm:px-10 rounded-full bg-primary text-white font-black uppercase tracking-[0.2em] hover:bg-orange-600 transition-all shadow-xl group">
+                                                    <Link href="/meal-plans" className="flex items-center gap-2">
+                                                        <span>View Protocols & Recon</span>
+                                                        <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                                    </Link>
+                                                </Button>
+                                                <Button asChild variant="outline" className="w-full sm:w-auto h-16 px-8 rounded-full border-white/20 bg-transparent text-white font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
+                                                    <Link href="/">Return to Ops</Link>
+                                                </Button>
+                                            </div>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

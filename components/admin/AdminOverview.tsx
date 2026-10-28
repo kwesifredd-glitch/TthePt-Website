@@ -93,7 +93,7 @@ export function AdminOverview({
                         £{stats.totalRevenue.toLocaleString()}
                     </p>
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Across Paystack, Stripe & Direct
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Across Stripe & Direct
                     </p>
                 </div>
 

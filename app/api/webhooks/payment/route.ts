@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
+import Stripe from 'stripe';
 import { db, Booking, Payment, PaymentPlatform } from '@/lib/store';
 
 export async function GET() {
-    const settings = db.getSettings();
+    const settings = await db.getSettings();
     return NextResponse.json({
         status: 'active',
         service: 'TthePT Third-Party Payment Webhook Receiver',
@@ -18,7 +20,7 @@ export async function GET() {
                 referenceId: 'ch_12345 or PAYID-12345',
                 bookingId: 'optional_existing_booking_id',
                 package: '12 Sessions a month',
-                secret: 'optional_webhook_secret_key'
+                secret: 'required unless Stripe-signed: WEBHOOK_SECRET (or x-webhook-secret header)'
             },
             notes: 'Native Stripe webhook payloads (checkout.session.completed, payment_intent.succeeded) and PayPal webhook payloads (PAYMENT.CAPTURE.COMPLETED) are automatically parsed.'
         },
@@ -99,7 +101,26 @@ export async function POST(request: Request) {
 
         const headersList = request.headers;
         const stripeSignature = headersList.get('stripe-signature');
-        const settings = db.getSettings();
+        const settings = await db.getSettings();
+
+        // Only accept events that prove they came from Stripe, or from a sender holding WEBHOOK_SECRET
+        if (stripeSignature) {
+            const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+            if (!stripeWebhookSecret) {
+                return NextResponse.json({ error: 'Stripe webhooks are not configured' }, { status: 503 });
+            }
+            try {
+                Stripe.webhooks.constructEvent(bodyText, stripeSignature, stripeWebhookSecret);
+            } catch {
+                return NextResponse.json({ error: 'Invalid Stripe signature' }, { status: 401 });
+            }
+        } else {
+            const expected = process.env.WEBHOOK_SECRET || '';
+            const provided = headersList.get('x-webhook-secret') || payload.secret || '';
+            if (!expected || provided.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected))) {
+                return NextResponse.json({ error: 'Unauthorized webhook' }, { status: 401 });
+            }
+        }
 
         // Standardized extraction variables
         let provider: PaymentPlatform = 'webhook';
@@ -147,35 +168,10 @@ export async function POST(request: Request) {
             bookingId = res?.custom_id || res?.invoice_id || undefined;
             description = `PayPal Transaction (${eventType}) - ${referenceId}`;
         }
-        // 3. Check if this is a native Paystack Webhook event
-        else if (payload.event === 'charge.success' || headersList.get('x-paystack-signature') || (payload.data && typeof (payload.data as Record<string, unknown>).reference === 'string')) {
-            provider = 'paystack';
-            eventType = payload.event || 'charge.success';
-
-            const psData = payload.data as {
-                reference?: string;
-                amount?: number;
-                currency?: string;
-                customer?: { email?: string; first_name?: string; last_name?: string };
-                metadata?: { bookingId?: string; clientName?: string; package?: string; email?: string };
-            } | undefined;
-
-            referenceId = psData?.reference || `paystack_${Date.now()}`;
-            amount = typeof psData?.amount === 'number' ? psData.amount / 100 : 0;
-            currency = (psData?.currency || settings.gateway.currency || 'GBP').toUpperCase();
-
-            clientEmail = psData?.customer?.email || psData?.metadata?.email || '';
-            const fname = psData?.customer?.first_name || '';
-            const lname = psData?.customer?.last_name || '';
-            clientName = `${fname} ${lname}`.trim() || psData?.metadata?.clientName || clientEmail.split('@')[0] || 'Paystack Trainee';
-            bookingId = psData?.metadata?.bookingId;
-            packageName = psData?.metadata?.package || 'Personal Training Protocol';
-            description = `Paystack Charge (${eventType}) - ${referenceId}`;
-        }
-        // 4. Generic / Custom Third-Party Webhook
+        // 3. Generic / Custom Third-Party Webhook
         else {
             const rawProv = (payload.provider?.toLowerCase() || 'webhook');
-            provider = ['stripe', 'paypal', 'paystack', 'square', 'manual', 'webhook'].includes(rawProv) ? (rawProv as PaymentPlatform) : 'webhook';
+            provider = ['stripe', 'paypal', 'square', 'manual', 'webhook'].includes(rawProv) ? (rawProv as PaymentPlatform) : 'webhook';
             eventType = payload.eventType || payload.type || 'external.payment';
             clientName = payload.clientName || payload.name || 'External Trainee';
             clientEmail = payload.clientEmail || payload.email || '';
@@ -194,7 +190,7 @@ export async function POST(request: Request) {
         }
 
         // Check if an existing booking matches by bookingId or email
-        const allBookings = db.getBookings();
+        const allBookings = await db.getBookings();
         let matchedBooking: Booking | undefined = undefined;
 
         if (bookingId) {
@@ -219,7 +215,7 @@ export async function POST(request: Request) {
 
         // If matched an existing booking, update it
         if (matchedBooking) {
-            db.updateBooking(matchedBooking.id, {
+            await db.updateBooking(matchedBooking.id, {
                 status: 'confirmed',
                 paymentStatus: 'paid',
                 paymentMethod: provider,
@@ -260,7 +256,7 @@ export async function POST(request: Request) {
                 createdAt: new Date().toISOString()
             };
 
-            db.addBooking(newBooking);
+            await db.addBooking(newBooking);
             bookingId = newBookingId;
         }
 
@@ -281,7 +277,7 @@ export async function POST(request: Request) {
             createdAt: new Date().toISOString()
         };
 
-        db.addPayment(paymentRecord);
+        await db.addPayment(paymentRecord);
 
         return NextResponse.json({
             success: true,
@@ -294,7 +290,7 @@ export async function POST(request: Request) {
             amount: paymentRecord.amount,
             currency,
             isNewSignup,
-            stats: db.getStats()
+            stats: await db.getStats()
         });
 
     } catch (error: unknown) {

@@ -7,7 +7,7 @@ export async function GET(request: Request) {
         const platform = searchParams.get('platform');
         const status = searchParams.get('status');
 
-        let payments = db.getPayments();
+        let payments = await db.getPayments();
 
         if (platform && platform !== 'all') {
             payments = payments.filter(p => p.platform === platform);
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
             payments = payments.filter(p => p.status === status);
         }
 
-        const stats = db.getStats();
+        const stats = await db.getStats();
 
         return NextResponse.json({ payments, stats });
     } catch (error) {
@@ -49,11 +49,11 @@ export async function POST(request: Request) {
             createdAt: new Date().toISOString()
         };
 
-        db.addPayment(newPayment);
+        await db.addPayment(newPayment);
 
         // If linked to a booking, update the booking's payment status to paid
         if (bookingId) {
-            db.updateBooking(bookingId, {
+            await db.updateBooking(bookingId, {
                 paymentStatus: 'paid',
                 paymentMethod: platform || 'manual',
                 paymentRef: newPayment.referenceId,
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
             });
         }
 
-        return NextResponse.json({ success: true, payment: newPayment, stats: db.getStats() });
+        return NextResponse.json({ success: true, payment: newPayment, stats: await db.getStats() });
     } catch (error) {
         console.error('Error recording payment:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -77,17 +77,17 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Payment ID and new status are required' }, { status: 400 });
         }
 
-        const updated = db.updatePayment(id, { status });
+        const updated = await db.updatePayment(id, { status });
         if (!updated) {
             return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
         }
 
         // If refunded and tied to a booking, update booking payment status
         if (status === 'refunded' && updated.bookingId) {
-            db.updateBooking(updated.bookingId, { paymentStatus: 'refunded' });
+            await db.updateBooking(updated.bookingId, { paymentStatus: 'refunded' });
         }
 
-        return NextResponse.json({ success: true, payment: updated, stats: db.getStats() });
+        return NextResponse.json({ success: true, payment: updated, stats: await db.getStats() });
     } catch (error) {
         console.error('Error updating payment status:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

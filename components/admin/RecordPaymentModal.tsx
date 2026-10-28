@@ -180,7 +180,6 @@ export function RecordPaymentModal({ isOpen, onClose, onSuccess, bookings }: Rec
                                 onChange={(e) => setPlatform(e.target.value as PaymentPlatform)}
                                 className="w-full h-12 bg-white border border-slate-300 rounded-xl px-3 font-bold text-sm text-zinc-950 focus:outline-none focus:border-primary shadow-xs"
                             >
-                                <option value="paystack" className="bg-white text-zinc-950">Paystack</option>
                                 <option value="stripe" className="bg-white text-zinc-950">Stripe</option>
                                 <option value="paypal" className="bg-white text-zinc-950">PayPal</option>
                                 <option value="square" className="bg-white text-zinc-950">Square</option>

@@ -8,7 +8,7 @@ export async function GET(request: Request) {
         const status = searchParams.get('status');
         const paymentStatus = searchParams.get('paymentStatus');
 
-        let bookings = db.getBookings();
+        let bookings = await db.getBookings();
 
         if (search) {
             bookings = bookings.filter(b =>
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
             bookings = bookings.filter(b => b.paymentStatus === paymentStatus);
         }
 
-        const stats = db.getStats();
+        const stats = await db.getStats();
 
         return NextResponse.json({ bookings, stats });
     } catch (error) {
@@ -64,11 +64,11 @@ export async function POST(request: Request) {
             createdAt: new Date().toISOString()
         };
 
-        db.addBooking(newBooking);
+        await db.addBooking(newBooking);
 
         // If paymentStatus is 'paid', automatically log transaction in payments ledger
         if (newBooking.paymentStatus === 'paid') {
-            db.addPayment({
+            await db.addPayment({
                 id: `tx_${Date.now()}`,
                 bookingId: newBooking.id,
                 clientName: newBooking.name,
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
             });
         }
 
-        return NextResponse.json({ success: true, booking: newBooking, stats: db.getStats() });
+        return NextResponse.json({ success: true, booking: newBooking, stats: await db.getStats() });
     } catch (error) {
         console.error('Error creating admin booking:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -99,7 +99,7 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Booking ID is required' }, { status: 400 });
         }
 
-        const existingBooking = db.getBooking(id);
+        const existingBooking = await db.getBooking(id);
         if (!existingBooking) {
             return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
         }
@@ -111,7 +111,7 @@ export async function PATCH(request: Request) {
                 updates.paymentRef = `MANUAL-${Date.now().toString().slice(-6)}`;
             }
 
-            db.addPayment({
+            await db.addPayment({
                 id: `tx_${Date.now()}`,
                 bookingId: existingBooking.id,
                 clientName: existingBooking.name,
@@ -126,9 +126,9 @@ export async function PATCH(request: Request) {
             });
         }
 
-        const updated = db.updateBooking(id, updates);
+        const updated = await db.updateBooking(id, updates);
 
-        return NextResponse.json({ success: true, booking: updated, stats: db.getStats() });
+        return NextResponse.json({ success: true, booking: updated, stats: await db.getStats() });
     } catch (error) {
         console.error('Error updating admin booking:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -144,12 +144,12 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: 'Booking ID is required' }, { status: 400 });
         }
 
-        const success = db.deleteBooking(id);
+        const success = await db.deleteBooking(id);
         if (!success) {
             return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, stats: db.getStats() });
+        return NextResponse.json({ success: true, stats: await db.getStats() });
     } catch (error) {
         console.error('Error deleting admin booking:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

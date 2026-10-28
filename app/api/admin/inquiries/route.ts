@@ -3,7 +3,7 @@ import { db } from '@/lib/store';
 
 export async function GET() {
     try {
-        const inquiries = db.getInquiries();
+        const inquiries = await db.getInquiries();
         return NextResponse.json({ inquiries });
     } catch (error) {
         console.error('Error fetching inquiries:', error);
@@ -20,7 +20,7 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Inquiry ID and status are required' }, { status: 400 });
         }
 
-        const updated = db.updateInquiry(id, { status });
+        const updated = await db.updateInquiry(id, { status });
         if (!updated) {
             return NextResponse.json({ error: 'Inquiry not found' }, { status: 404 });
         }
@@ -41,7 +41,7 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: 'Inquiry ID is required' }, { status: 400 });
         }
 
-        const success = db.deleteInquiry(id);
+        const success = await db.deleteInquiry(id);
         if (!success) {
             return NextResponse.json({ error: 'Inquiry not found' }, { status: 404 });
         }
