@@ -6,18 +6,22 @@ export const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days, in seconds
 
 const encoder = new TextEncoder();
 
-function getSecret(): string {
+// Signing key: ADMIN_SESSION_SECRET when it is long enough, otherwise derived from ADMIN_PASSWORD
+// (so changing the password also signs out existing sessions).
+async function getKeyMaterial(): Promise<ArrayBuffer> {
     const secret = process.env.ADMIN_SESSION_SECRET;
-    if (!secret || secret.length < 32) {
-        throw new Error("ADMIN_SESSION_SECRET must be set (at least 32 characters).");
+    const password = process.env.ADMIN_PASSWORD;
+    const base = secret && secret.length >= 32 ? secret : password;
+    if (!base) {
+        throw new Error("ADMIN_PASSWORD must be set.");
     }
-    return secret;
+    return crypto.subtle.digest("SHA-256", encoder.encode(`tthept-admin-session:${base}`));
 }
 
 async function sign(value: string): Promise<string> {
     const key = await crypto.subtle.importKey(
         "raw",
-        encoder.encode(getSecret()),
+        await getKeyMaterial(),
         { name: "HMAC", hash: "SHA-256" },
         false,
         ["sign"]
