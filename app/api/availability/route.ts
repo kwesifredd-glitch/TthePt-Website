@@ -9,6 +9,6 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Date is required' }, { status: 400 });
     }
 
-    const slots = db.getAvailableSlots(date);
+    const slots = await db.getAvailableSlots(date);
     return NextResponse.json({ slots });
 }

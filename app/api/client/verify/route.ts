@@ -37,7 +37,7 @@ export async function POST(request: Request) {
                 createdAt: new Date().toISOString()
             };
 
-            db.addBooking(newBooking);
+            await db.addBooking(newBooking);
 
             return NextResponse.json({
                 success: true,
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         }
 
         // Verify against existing bookings
-        const bookings = db.getBookings();
+        const bookings = await db.getBookings();
         const matched = bookings.find(
             b => b.email && b.email.trim().toLowerCase() === cleanEmail
         );
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         }
 
         // Also check inquiries as a fallback
-        const inquiries: Inquiry[] = db.getInquiries();
+        const inquiries: Inquiry[] = await db.getInquiries();
         const matchedInquiry = inquiries.find(
             (i: Inquiry) => i.email && i.email.trim().toLowerCase() === cleanEmail
         );

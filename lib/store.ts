@@ -1,7 +1,28 @@
 import fs from 'fs';
 import path from 'path';
+import { Redis } from '@upstash/redis';
 
+// Data lives in Upstash Redis when it is configured (Vercel), otherwise in a local db.json file.
 const DB_PATH = path.join(process.cwd(), 'db.json');
+const REDIS_KEY = 'tthept:db';
+
+const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null;
+
+async function loadRaw(): Promise<Record<string, unknown> | null> {
+    if (redis) return await redis.get<Record<string, unknown>>(REDIS_KEY);
+    if (!fs.existsSync(DB_PATH)) return null;
+    return JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+}
+
+async function saveRaw(data: unknown): Promise<void> {
+    if (redis) {
+        await redis.set(REDIS_KEY, data);
+        return;
+    }
+    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+}
 
 export type BookingStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled';
 export type PaymentStatus = 'paid' | 'unpaid' | 'partial' | 'refunded';
@@ -122,15 +143,20 @@ const defaultDB: DB = {
     }
 };
 
-function readDB(): DB {
-    if (!fs.existsSync(DB_PATH)) {
-        writeDB(defaultDB);
+async function readDB(): Promise<DB> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let data: any;
+    try {
+        data = await loadRaw();
+    } catch (error) {
+        console.error('Failed to load data store:', error);
+        throw error;
+    }
+    if (!data) {
+        await writeDB(defaultDB);
         return defaultDB;
     }
-    try {
-        const raw = fs.readFileSync(DB_PATH, 'utf-8');
-        const data = JSON.parse(raw);
-
+    {
         // Normalize bookings so older records have status & paymentStatus
         const normalizedBookings: Booking[] = (data.bookings || []).map((b: Record<string, unknown>) => ({
             id: String(b.id || ''),
@@ -169,114 +195,112 @@ function readDB(): DB {
             settings: normalizedSettings,
             content: { ...defaultDB.content, ...data?.content }
         };
-    } catch {
-        return defaultDB;
     }
 }
 
-function writeDB(db: DB) {
+async function writeDB(db: DB): Promise<void> {
     const gateway: Partial<GatewaySettings> = { ...db.settings.gateway };
     for (const field of SECRET_GATEWAY_FIELDS) delete gateway[field];
     for (const legacy of ['paystackEnabled', 'paystackPublicKey', 'paystackSecretKey', 'paystackWebhookSecret']) {
         delete (gateway as Record<string, unknown>)[legacy];
     }
     const safe = { ...db, settings: { ...db.settings, gateway } };
-    fs.writeFileSync(DB_PATH, JSON.stringify(safe, null, 2));
+    await saveRaw(safe);
 }
 
 export const db = {
     // Bookings
-    getBookings: (): Booking[] => {
-        return readDB().bookings;
+    getBookings: async (): Promise<Booking[]> => {
+        return (await readDB()).bookings;
     },
 
-    getBooking: (id: string): Booking | undefined => {
-        return readDB().bookings.find(b => b.id === id);
+    getBooking: async (id: string): Promise<Booking | undefined> => {
+        return (await readDB()).bookings.find(b => b.id === id);
     },
 
-    addBooking: (booking: Booking): Booking => {
-        const data = readDB();
+    addBooking: async (booking: Booking): Promise<Booking> => {
+        const data = await readDB();
         data.bookings.unshift(booking);
-        writeDB(data);
+        await writeDB(data);
         return booking;
     },
 
-    updateBooking: (id: string, updates: Partial<Booking>): Booking | null => {
-        const data = readDB();
+    updateBooking: async (id: string, updates: Partial<Booking>): Promise<Booking | null> => {
+        const data = await readDB();
         const index = data.bookings.findIndex(b => b.id === id);
         if (index === -1) return null;
         data.bookings[index] = { ...data.bookings[index], ...updates };
-        writeDB(data);
+        await writeDB(data);
         return data.bookings[index];
     },
 
-    deleteBooking: (id: string): boolean => {
-        const data = readDB();
+    deleteBooking: async (id: string): Promise<boolean> => {
+        const data = await readDB();
         const initialLength = data.bookings.length;
         data.bookings = data.bookings.filter(b => b.id !== id);
         if (data.bookings.length !== initialLength) {
-            writeDB(data);
+            await writeDB(data);
             return true;
         }
         return false;
     },
 
     // Payments
-    getPayments: (): Payment[] => {
-        return readDB().payments;
+    getPayments: async (): Promise<Payment[]> => {
+        return (await readDB()).payments;
     },
 
-    addPayment: (payment: Payment): Payment => {
-        const data = readDB();
+    addPayment: async (payment: Payment): Promise<Payment> => {
+        const data = await readDB();
         data.payments.unshift(payment);
-        writeDB(data);
+        await writeDB(data);
         return payment;
     },
 
-    updatePayment: (id: string, updates: Partial<Payment>): Payment | null => {
-        const data = readDB();
+    updatePayment: async (id: string, updates: Partial<Payment>): Promise<Payment | null> => {
+        const data = await readDB();
         const index = data.payments.findIndex(p => p.id === id);
         if (index === -1) return null;
         data.payments[index] = { ...data.payments[index], ...updates };
-        writeDB(data);
+        await writeDB(data);
         return data.payments[index];
     },
 
     // Inquiries
-    getInquiries: (): Inquiry[] => {
-        return readDB().inquiries;
+    getInquiries: async (): Promise<Inquiry[]> => {
+        return (await readDB()).inquiries;
     },
 
-    addInquiry: (inquiry: Inquiry): Inquiry => {
-        const data = readDB();
+    addInquiry: async (inquiry: Inquiry): Promise<Inquiry> => {
+        const data = await readDB();
         data.inquiries.unshift(inquiry);
-        writeDB(data);
+        await writeDB(data);
         return inquiry;
     },
 
-    updateInquiry: (id: string, updates: Partial<Inquiry>): Inquiry | null => {
-        const data = readDB();
+    updateInquiry: async (id: string, updates: Partial<Inquiry>): Promise<Inquiry | null> => {
+        const data = await readDB();
         const index = data.inquiries.findIndex(i => i.id === id);
         if (index === -1) return null;
         data.inquiries[index] = { ...data.inquiries[index], ...updates };
-        writeDB(data);
+        await writeDB(data);
         return data.inquiries[index];
     },
 
-    deleteInquiry: (id: string): boolean => {
-        const data = readDB();
+    deleteInquiry: async (id: string): Promise<boolean> => {
+        const data = await readDB();
         const initialLength = data.inquiries.length;
         data.inquiries = data.inquiries.filter(i => i.id !== id);
         if (data.inquiries.length !== initialLength) {
-            writeDB(data);
+            await writeDB(data);
             return true;
         }
         return false;
     },
 
     // Availability
-    getAvailableSlots: (date: string): string[] => {
-        const data = readDB();
+    getAvailableSlots: async (date: string): Promise<string[]> => {
+        const data = await readDB();
         const bookedTimes = data.bookings
             .filter(b => b.date === date && b.status === "confirmed")
             .map(b => b.time);
@@ -301,12 +325,12 @@ export const db = {
     },
 
     // Gateway & Settings
-    getSettings: () => {
-        return readDB().settings;
+    getSettings: async () => {
+        return (await readDB()).settings;
     },
 
-    updateSettings: (settingsUpdates: Partial<DB['settings']>) => {
-        const data = readDB();
+    updateSettings: async (settingsUpdates: Partial<DB['settings']>) => {
+        const data = await readDB();
         data.settings = {
             ...data.settings,
             ...settingsUpdates,
@@ -315,22 +339,22 @@ export const db = {
                 ...(settingsUpdates.gateway || {})
             }
         };
-        writeDB(data);
+        await writeDB(data);
         return data.settings;
     },
 
     // Content
-    getContent: () => readDB().content,
-    updateContent: (content: Partial<Content>) => {
-        const data = readDB();
+    getContent: async () => (await readDB()).content,
+    updateContent: async (content: Partial<Content>) => {
+        const data = await readDB();
         data.content = { ...data.content, ...content };
-        writeDB(data);
+        await writeDB(data);
         return data.content;
     },
 
     // Aggregated Stats
-    getStats: () => {
-        const data = readDB();
+    getStats: async () => {
+        const data = await readDB();
         const bookings = data.bookings;
         const payments = data.payments;
 

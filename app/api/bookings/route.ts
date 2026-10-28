@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         }
 
         // Double check availability
-        const availableSlots = db.getAvailableSlots(date);
+        const availableSlots = await db.getAvailableSlots(date);
         if (!availableSlots.includes(time)) {
             return NextResponse.json({ error: 'Slot no longer available' }, { status: 409 });
         }
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
             createdAt: new Date().toISOString(),
         };
 
-        db.addBooking(booking);
+        await db.addBooking(booking);
 
         return NextResponse.json({ success: true, booking });
     } catch (error) {

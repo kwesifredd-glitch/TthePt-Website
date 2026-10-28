@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import { db, Booking, Payment, PaymentPlatform } from '@/lib/store';
 
 export async function GET() {
-    const settings = db.getSettings();
+    const settings = await db.getSettings();
     return NextResponse.json({
         status: 'active',
         service: 'TthePT Third-Party Payment Webhook Receiver',
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
 
         const headersList = request.headers;
         const stripeSignature = headersList.get('stripe-signature');
-        const settings = db.getSettings();
+        const settings = await db.getSettings();
 
         // Only accept events that prove they came from Stripe, or from a sender holding WEBHOOK_SECRET
         if (stripeSignature) {
@@ -190,7 +190,7 @@ export async function POST(request: Request) {
         }
 
         // Check if an existing booking matches by bookingId or email
-        const allBookings = db.getBookings();
+        const allBookings = await db.getBookings();
         let matchedBooking: Booking | undefined = undefined;
 
         if (bookingId) {
@@ -215,7 +215,7 @@ export async function POST(request: Request) {
 
         // If matched an existing booking, update it
         if (matchedBooking) {
-            db.updateBooking(matchedBooking.id, {
+            await db.updateBooking(matchedBooking.id, {
                 status: 'confirmed',
                 paymentStatus: 'paid',
                 paymentMethod: provider,
@@ -256,7 +256,7 @@ export async function POST(request: Request) {
                 createdAt: new Date().toISOString()
             };
 
-            db.addBooking(newBooking);
+            await db.addBooking(newBooking);
             bookingId = newBookingId;
         }
 
@@ -277,7 +277,7 @@ export async function POST(request: Request) {
             createdAt: new Date().toISOString()
         };
 
-        db.addPayment(paymentRecord);
+        await db.addPayment(paymentRecord);
 
         return NextResponse.json({
             success: true,
@@ -290,7 +290,7 @@ export async function POST(request: Request) {
             amount: paymentRecord.amount,
             currency,
             isNewSignup,
-            stats: db.getStats()
+            stats: await db.getStats()
         });
 
     } catch (error: unknown) {
