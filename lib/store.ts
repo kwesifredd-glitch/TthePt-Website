@@ -5,7 +5,7 @@ const DB_PATH = path.join(process.cwd(), 'db.json');
 
 export type BookingStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled';
 export type PaymentStatus = 'paid' | 'unpaid' | 'partial' | 'refunded';
-export type PaymentPlatform = 'stripe' | 'paypal' | 'paystack' | 'square' | 'manual' | 'webhook';
+export type PaymentPlatform = 'stripe' | 'paypal' | 'square' | 'manual' | 'webhook';
 
 export type Booking = {
     id: string;
@@ -62,10 +62,6 @@ export type GatewaySettings = {
     paypalEnabled: boolean;
     paypalClientId: string;
     paypalWebhookId: string;
-    paystackEnabled: boolean;
-    paystackPublicKey: string;
-    paystackSecretKey: string;
-    paystackWebhookSecret: string;
     webhookSecretKey: string;
     currency: string;
 };
@@ -91,9 +87,6 @@ const SECRET_GATEWAY_FIELDS = [
     'stripePublishableKey',
     'stripeSecretKey',
     'stripeWebhookSecret',
-    'paystackPublicKey',
-    'paystackSecretKey',
-    'paystackWebhookSecret',
     'webhookSecretKey',
 ] as const;
 
@@ -102,9 +95,6 @@ function envGatewaySecrets(): Pick<GatewaySettings, typeof SECRET_GATEWAY_FIELDS
         stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
         stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
         stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
-        paystackPublicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-        paystackSecretKey: process.env.PAYSTACK_SECRET_KEY || '',
-        paystackWebhookSecret: process.env.PAYSTACK_WEBHOOK_SECRET || '',
         webhookSecretKey: process.env.WEBHOOK_SECRET || '',
     };
 }
@@ -114,7 +104,6 @@ const defaultGatewaySettings: GatewaySettings = {
     paypalEnabled: false,
     paypalClientId: '',
     paypalWebhookId: '',
-    paystackEnabled: true,
     currency: 'GBP',
     ...envGatewaySecrets()
 };
@@ -188,6 +177,9 @@ function readDB(): DB {
 function writeDB(db: DB) {
     const gateway: Partial<GatewaySettings> = { ...db.settings.gateway };
     for (const field of SECRET_GATEWAY_FIELDS) delete gateway[field];
+    for (const legacy of ['paystackEnabled', 'paystackPublicKey', 'paystackSecretKey', 'paystackWebhookSecret']) {
+        delete (gateway as Record<string, unknown>)[legacy];
+    }
     const safe = { ...db, settings: { ...db.settings, gateway } };
     fs.writeFileSync(DB_PATH, JSON.stringify(safe, null, 2));
 }

@@ -41,10 +41,6 @@ export function AdminPayments({
         .filter(p => p.status === "succeeded")
         .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
-    const paystackTotal = payments
-        .filter(p => p.platform === "paystack" && p.status === "succeeded")
-        .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-
     const stripeTotal = payments
         .filter(p => p.platform === "stripe" && p.status === "succeeded")
         .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
@@ -83,16 +79,11 @@ export function AdminPayments({
             </div>
 
             {/* Platform Revenue Breakdown */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-5 bg-white border border-slate-200 shadow-sm rounded-2xl">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Total Volume</span>
                     <p className="text-2xl font-black italic tracking-tight text-zinc-950 leading-none">£{totalCollected.toLocaleString()}.00</p>
                     <span className="text-[9px] text-slate-400 font-bold uppercase mt-1 block">{payments.length} Transactions</span>
-                </div>
-                <div className="p-5 bg-white border border-emerald-200 shadow-sm rounded-2xl">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 block mb-1">Paystack Gateway</span>
-                    <p className="text-2xl font-black italic tracking-tight text-emerald-600 leading-none">£{paystackTotal.toLocaleString()}.00</p>
-                    <span className="text-[9px] text-slate-400 font-bold uppercase mt-1 block">Live & Webhooks</span>
                 </div>
                 <div className="p-5 bg-white border border-slate-200 shadow-sm rounded-2xl">
                     <span className="text-[10px] font-black uppercase tracking-widest text-primary block mb-1">Stripe Gateway</span>
@@ -130,7 +121,6 @@ export function AdminPayments({
                         className="w-full h-12 bg-white border border-slate-300 rounded-xl px-4 font-bold text-xs uppercase tracking-wider text-zinc-950 focus:outline-none focus:border-primary shadow-xs"
                     >
                         <option value="all">Platform: All</option>
-                        <option value="paystack">Paystack</option>
                         <option value="stripe">Stripe</option>
                         <option value="paypal">PayPal</option>
                         <option value="square">Square</option>
@@ -172,9 +162,7 @@ export function AdminPayments({
                                 {/* Left: Platform Badge & Client Identity */}
                                 <div className="flex items-center gap-3.5 min-w-0">
                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xs uppercase border shrink-0 tracking-wider ${
-                                        pay.platform === "paystack"
-                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                            : pay.platform === "stripe"
+                                        pay.platform === "stripe"
                                             ? "bg-orange-50 text-primary border-orange-200"
                                             : pay.platform === "paypal"
                                             ? "bg-blue-50 text-blue-700 border-blue-200"

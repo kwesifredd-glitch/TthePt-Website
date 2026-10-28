@@ -168,35 +168,10 @@ export async function POST(request: Request) {
             bookingId = res?.custom_id || res?.invoice_id || undefined;
             description = `PayPal Transaction (${eventType}) - ${referenceId}`;
         }
-        // 3. Check if this is a native Paystack Webhook event
-        else if (payload.event === 'charge.success' || headersList.get('x-paystack-signature') || (payload.data && typeof (payload.data as Record<string, unknown>).reference === 'string')) {
-            provider = 'paystack';
-            eventType = payload.event || 'charge.success';
-
-            const psData = payload.data as {
-                reference?: string;
-                amount?: number;
-                currency?: string;
-                customer?: { email?: string; first_name?: string; last_name?: string };
-                metadata?: { bookingId?: string; clientName?: string; package?: string; email?: string };
-            } | undefined;
-
-            referenceId = psData?.reference || `paystack_${Date.now()}`;
-            amount = typeof psData?.amount === 'number' ? psData.amount / 100 : 0;
-            currency = (psData?.currency || settings.gateway.currency || 'GBP').toUpperCase();
-
-            clientEmail = psData?.customer?.email || psData?.metadata?.email || '';
-            const fname = psData?.customer?.first_name || '';
-            const lname = psData?.customer?.last_name || '';
-            clientName = `${fname} ${lname}`.trim() || psData?.metadata?.clientName || clientEmail.split('@')[0] || 'Paystack Trainee';
-            bookingId = psData?.metadata?.bookingId;
-            packageName = psData?.metadata?.package || 'Personal Training Protocol';
-            description = `Paystack Charge (${eventType}) - ${referenceId}`;
-        }
-        // 4. Generic / Custom Third-Party Webhook
+        // 3. Generic / Custom Third-Party Webhook
         else {
             const rawProv = (payload.provider?.toLowerCase() || 'webhook');
-            provider = ['stripe', 'paypal', 'paystack', 'square', 'manual', 'webhook'].includes(rawProv) ? (rawProv as PaymentPlatform) : 'webhook';
+            provider = ['stripe', 'paypal', 'square', 'manual', 'webhook'].includes(rawProv) ? (rawProv as PaymentPlatform) : 'webhook';
             eventType = payload.eventType || payload.type || 'external.payment';
             clientName = payload.clientName || payload.name || 'External Trainee';
             clientEmail = payload.clientEmail || payload.email || '';

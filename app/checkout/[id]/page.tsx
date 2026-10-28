@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { stripeCheckoutUrl } from "@/lib/payment-links";
 function CheckoutContent() {
     const params = useParams();
     const router = useRouter();
-    const searchParams = useSearchParams();
     const bookingId = params.id as string;
 
     const [booking, setBooking] = useState<Booking | null>(null);
@@ -21,25 +20,9 @@ function CheckoutContent() {
     const [error, setError] = useState("");
     const [processing, setProcessing] = useState(false);
     const [paidSuccess, setPaidSuccess] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState<"paystack" | "stripe">("paystack");
-
-    const refParam = searchParams.get("reference");
-    const paystackParam = searchParams.get("paystack");
 
     useEffect(() => {
         if (!bookingId) return;
-
-        // Check if returning from a Paystack redirect
-        if (refParam && paystackParam) {
-            fetch(`/api/paystack/verify?reference=${encodeURIComponent(refParam)}&bookingId=${bookingId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success && data.paid) {
-                        setPaidSuccess(true);
-                    }
-                })
-                .catch(err => console.error("Paystack verification error", err));
-        }
 
         fetch(`/api/bookings/${encodeURIComponent(bookingId)}`)
             .then(res => res.json())
@@ -59,7 +42,7 @@ function CheckoutContent() {
                 setError("Failed to retrieve protocol details.");
             })
             .finally(() => setLoading(false));
-    }, [bookingId, refParam, paystackParam]);
+    }, [bookingId]);
 
     const handlePayNow = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -67,41 +50,12 @@ function CheckoutContent() {
         setProcessing(true);
 
         try {
-            if (paymentMethod === "paystack") {
-                const res = await fetch("/api/paystack/initialize", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        bookingId: booking.id,
-                        email: booking.email,
-                        name: booking.name,
-                        amount: booking.price || 30,
-                        currency: booking.currency || "GBP",
-                        package: booking.package
-                    })
-                });
-
-                const result = await res.json();
-
-                if (result.success) {
-                    if (result.authorizationUrl) {
-                        window.location.href = result.authorizationUrl;
-                        return;
-                    } else {
-                        // Instant sandbox completion
-                        setPaidSuccess(true);
-                    }
-                } else {
-                    alert(result.error || "Paystack authorization failed.");
-                }
-            } else {
-                const stripeUrl = stripeCheckoutUrl(booking.package, booking.email, booking.id);
-                if (stripeUrl) {
-                    window.location.href = stripeUrl;
-                    return;
-                }
-                alert("Card payment isn't available for this package yet. Please choose Paystack or contact your coach.");
+            const stripeUrl = stripeCheckoutUrl(booking.package, booking.email, booking.id);
+            if (stripeUrl) {
+                window.location.href = stripeUrl;
+                return;
             }
+            alert("Online payment isn't available for this package yet. Please contact your coach to pay.");
         } catch (err) {
             console.error(err);
             alert("A transmission error occurred while processing payment.");
@@ -223,59 +177,9 @@ function CheckoutContent() {
 
                             {/* Payment Form */}
                             <div className="md:col-span-7 bg-zinc-950 border border-white/10 rounded-[2rem] p-6 md:p-8 space-y-6">
-                                <div>
-                                    <h3 className="text-xl font-black uppercase italic tracking-tight mb-3">Select Payment Method</h3>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {/* Paystack Option */}
-                                        <button
-                                            type="button"
-                                            onClick={() => setPaymentMethod("paystack")}
-                                            className={`p-4 rounded-xl border flex flex-col items-center gap-1.5 font-black uppercase text-xs tracking-wider transition-all cursor-pointer ${
-                                                paymentMethod === "paystack"
-                                                    ? "bg-emerald-500/20 border-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-                                                    : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
-                                            }`}
-                                        >
-                                            <div className="w-6 h-6 rounded-full bg-emerald-500 text-black flex items-center justify-center font-black text-xs">
-                                                P
-                                            </div>
-                                            <span>Paystack</span>
-                                            <span className="text-[8px] text-emerald-400 font-mono">Cards & Bank</span>
-                                        </button>
-
-                                        {/* Stripe Option */}
-                                        <button
-                                            type="button"
-                                            onClick={() => setPaymentMethod("stripe")}
-                                            className={`p-4 rounded-xl border flex flex-col items-center gap-1.5 font-black uppercase text-xs tracking-wider transition-all cursor-pointer ${
-                                                paymentMethod === "stripe"
-                                                    ? "bg-primary/20 border-primary text-white shadow-[0_0_20px_rgba(255,77,0,0.3)]"
-                                                    : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
-                                            }`}
-                                        >
-                                            <CreditCard className="h-5 w-5" />
-                                            <span>Card / Stripe</span>
-                                            <span className="text-[8px] text-gray-400 font-mono">Apple Pay</span>
-                                        </button>
-
-                                    </div>
-                                </div>
+                                <h3 className="text-xl font-black uppercase italic tracking-tight">Payment</h3>
 
                                 <form onSubmit={handlePayNow} className="space-y-4">
-                                    {paymentMethod === "paystack" ? (
-                                        <div className="p-6 bg-emerald-950/20 border border-emerald-500/20 rounded-2xl space-y-3">
-                                            <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase tracking-wider">
-                                                <ShieldCheck className="h-4 w-4" />
-                                                <span>Paystack Instant Checkout</span>
-                                            </div>
-                                            <p className="text-xs text-gray-400 leading-relaxed">
-                                                You will be directed to Paystack&apos;s PCI-DSS compliant checkout to complete your payment via Mastercard, Visa, Verve, Bank Transfer, or Apple Pay.
-                                            </p>
-                                            <div className="pt-2 text-[11px] font-mono text-gray-400">
-                                                Recipient: <strong className="text-white">TthePT Elite Conditioning</strong>
-                                            </div>
-                                        </div>
-                                    ) : (
                                         <div className="p-6 bg-primary/10 border border-primary/20 rounded-2xl space-y-3">
                                             <div className="flex items-center gap-2 text-primary text-xs font-black uppercase tracking-wider">
                                                 <CreditCard className="h-4 w-4" />
@@ -285,22 +189,15 @@ function CheckoutContent() {
                                                 You will be directed to Stripe&apos;s secure checkout to pay by card, Apple Pay or Revolut Pay.
                                             </p>
                                         </div>
-                                    )}
 
                                     <Button
                                         type="submit"
                                         disabled={processing}
-                                        className={`w-full h-16 rounded-full font-black uppercase tracking-widest italic text-base mt-6 transition-all cursor-pointer ${
-                                            paymentMethod === "paystack"
-                                                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_10px_30px_rgba(16,185,129,0.3)]"
-                                                : "bg-primary hover:bg-orange-600 text-white shadow-[0_10px_30px_rgba(255,77,0,0.3)]"
-                                        }`}
+                                        className="w-full h-16 rounded-full font-black uppercase tracking-widest italic text-base mt-6 transition-all cursor-pointer bg-primary hover:bg-orange-600 text-white shadow-[0_10px_30px_rgba(255,77,0,0.3)]"
                                     >
                                         {processing
                                             ? "Authorizing..."
-                                            : paymentMethod === "paystack"
-                                                ? `Pay £${booking.price}.00 with Paystack ↗`
-                                                : `Pay £${booking.price}.00 with Stripe ↗`}
+                                            : `Pay £${booking.price}.00 with Stripe ↗`}
                                     </Button>
 
                                     <p className="text-[10px] font-bold text-center text-gray-500 uppercase tracking-widest flex items-center justify-center gap-2 mt-4">
