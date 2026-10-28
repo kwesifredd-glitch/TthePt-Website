@@ -63,7 +63,7 @@ export default function AboutPage() {
                             <StaggerItem direction="up">
                                 <div className="space-y-4 sm:space-y-6 text-base sm:text-lg md:text-xl text-gray-300 font-medium leading-relaxed">
                                     <p>
-                                        With over a decade in high-performance conditioning, I&apos;ve seen every fad, trend, and &quot;shortcut.&quot; They all fail because they ignore the fundamental truth of human physiology: <span className="text-white font-black italic">excellence is a deliberate daily occurrence.</span>
+                                        In my years in high-performance conditioning, I&apos;ve seen every fad, trend, and &quot;shortcut.&quot; They all fail because they ignore the fundamental truth of human physiology: <span className="text-white font-black italic">excellence is a deliberate daily occurrence.</span>
                                     </p>
                                     <p>
                                         My methodology is forged in the fires of elite athletics and refined by years of data-driven coaching. I specialize in taking high-performers from &quot;fit&quot; to &quot;unbreakable.&quot;
@@ -71,20 +71,6 @@ export default function AboutPage() {
                                 </div>
                             </StaggerItem>
 
-                            <StaggerItem direction="up">
-                                <div className="grid grid-cols-3 gap-4 sm:gap-8 pt-8 border-t border-white/10">
-                                    {[
-                                        { label: "Years Exp", val: "12+" },
-                                        { label: "Elite Clients", val: "450+" },
-                                        { label: "Pro Certs", val: "22" }
-                                    ].map((stat, i) => (
-                                        <div key={i} className="text-left">
-                                            <h4 className="font-black text-2xl sm:text-4xl text-white tracking-tighter">{stat.val}</h4>
-                                            <p className="text-[10px] sm:text-xs font-black text-primary tracking-widest uppercase mt-1">{stat.label}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </StaggerItem>
                         </StaggerContainer>
                     </div>
                 </section>

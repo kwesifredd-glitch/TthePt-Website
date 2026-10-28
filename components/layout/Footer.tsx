@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, Twitter, Mail, MapPin, Phone } from "lucide-react";
+import { Instagram, MessageSquare } from "lucide-react";
 
 const Footer = () => {
     return (
@@ -40,9 +40,7 @@ const Footer = () => {
                                     </svg>
                                 ),
                                 href: "https://www.tiktok.com/@tthept"
-                            },
-                            { Icon: Twitter, href: "#" },
-                            { Icon: Facebook, href: "#" }
+                            }
                         ].map(({ Icon, href }, idx) => (
                             <a
                                 key={idx}
@@ -71,19 +69,19 @@ const Footer = () => {
 
                 {/* Contact */}
                 <div>
-                    <h4 className="text-sm font-black tracking-[0.2em] uppercase text-primary mb-8">Headquarters</h4>
+                    <h4 className="text-sm font-black tracking-[0.2em] uppercase text-primary mb-8">Get In Touch</h4>
                     <ul className="space-y-6 text-gray-400 font-medium">
-                        <li className="flex items-start space-x-4">
-                            <MapPin className="h-5 w-5 text-primary shrink-0" />
-                            <span>123 Elite Plaza, <br />London, UK</span>
+                        <li>
+                            <Link href="/contact" className="flex items-center space-x-4 hover:text-white transition-colors">
+                                <MessageSquare className="h-5 w-5 text-primary shrink-0" />
+                                <span>Send us a message</span>
+                            </Link>
                         </li>
-                        <li className="flex items-center space-x-4">
-                            <Phone className="h-5 w-5 text-primary shrink-0" />
-                            <span>+44 20 7123 4567</span>
-                        </li>
-                        <li className="flex items-center space-x-4">
-                            <Mail className="h-5 w-5 text-primary shrink-0" />
-                            <span>elite@thept.com</span>
+                        <li>
+                            <a href="https://www.instagram.com/_tthept__" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-4 hover:text-white transition-colors">
+                                <Instagram className="h-5 w-5 text-primary shrink-0" />
+                                <span>@_tthept__</span>
+                            </a>
                         </li>
                     </ul>
                 </div>
@@ -92,8 +90,7 @@ const Footer = () => {
                 <div className="border-t border-white/5 mt-20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-gray-600 tracking-widest uppercase">
                     <p>&copy; {new Date().getFullYear()} TthePT. ALL RIGHTS RESERVED.</p>
                     <div className="flex gap-8 items-center">
-                        <a href="#" className="hover:text-white">Privacy Policy</a>
-                        <a href="#" className="hover:text-white">Terms of Service</a>
+                        <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
                         <Link href="/admin" className="hover:text-primary transition-colors flex items-center gap-1.5 text-zinc-500">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
                             Staff Portal

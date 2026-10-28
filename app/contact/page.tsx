@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MapPin, Phone, MessageSquare, Send, Instagram } from "lucide-react";
+import { MessageSquare, Send, Instagram } from "lucide-react";
 import { useState } from "react";
 
 export default function ContactPage() {
@@ -81,9 +81,6 @@ export default function ContactPage() {
 
                                 <div className="space-y-8">
                                     {[
-                                        { icon: MapPin, label: "Command Center", val: "123 Elite Plaza, London", href: "#" },
-                                        { icon: Mail, label: "Email", val: "elite@thept.com", href: "mailto:elite@thept.com" },
-                                        { icon: Phone, label: "Phone", val: "+44 20 7123 4567", href: "tel:+442071234567" },
                                         { icon: Instagram, label: "Instagram", val: "@_tthept__", href: "https://www.instagram.com/_tthept__?igsh=MzdjbmM2aGlnbnQ4" },
                                         {
                                             icon: ({ className }: { className?: string }) => (
