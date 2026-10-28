@@ -67,14 +67,15 @@ export async function POST(request: Request) {
         const settings = db.getSettings();
         const secretKey = settings.gateway.paystackSecretKey || process.env.PAYSTACK_SECRET_KEY || '';
 
-        // Optional HMAC SHA512 signature validation when live secret is present
-        const signature = request.headers.get('x-paystack-signature');
-        if (signature && secretKey && !secretKey.includes('placeholder') && !secretKey.includes('sample')) {
-            const hash = crypto.createHmac('sha512', secretKey).update(bodyText).digest('hex');
-            if (hash !== signature) {
-                console.warn('Paystack webhook signature mismatch detected.');
-                return NextResponse.json({ error: 'Invalid Paystack signature' }, { status: 401 });
-            }
+        // Every Paystack webhook must carry a valid HMAC SHA512 signature
+        const signature = request.headers.get('x-paystack-signature') || '';
+        if (!secretKey) {
+            return NextResponse.json({ error: 'Paystack is not configured' }, { status: 503 });
+        }
+        const hash = crypto.createHmac('sha512', secretKey).update(bodyText).digest('hex');
+        if (signature.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature))) {
+            console.warn('Paystack webhook signature mismatch detected.');
+            return NextResponse.json({ error: 'Invalid Paystack signature' }, { status: 401 });
         }
 
         const event = payload.event || 'charge.success';

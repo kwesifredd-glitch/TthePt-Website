@@ -5,10 +5,10 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Lock, ShieldCheck, CheckCircle2, Zap, CreditCard, Calendar, Clock, AlertCircle } from "lucide-react";
 import { Booking } from "@/lib/store";
+import { stripeCheckoutUrl } from "@/lib/payment-links";
 
 function CheckoutContent() {
     const params = useParams();
@@ -21,7 +21,7 @@ function CheckoutContent() {
     const [error, setError] = useState("");
     const [processing, setProcessing] = useState(false);
     const [paidSuccess, setPaidSuccess] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState<"paystack" | "stripe" | "paypal">("paystack");
+    const [paymentMethod, setPaymentMethod] = useState<"paystack" | "stripe">("paystack");
 
     const refParam = searchParams.get("reference");
     const paystackParam = searchParams.get("paystack");
@@ -41,10 +41,10 @@ function CheckoutContent() {
                 .catch(err => console.error("Paystack verification error", err));
         }
 
-        fetch(`/api/admin/bookings`)
+        fetch(`/api/bookings/${encodeURIComponent(bookingId)}`)
             .then(res => res.json())
             .then(data => {
-                const found = (data.bookings || []).find((b: Booking) => b.id === bookingId);
+                const found: Booking | undefined = data.booking;
                 if (found) {
                     setBooking(found);
                     if (found.paymentStatus === 'paid') {
@@ -95,29 +95,12 @@ function CheckoutContent() {
                     alert(result.error || "Paystack authorization failed.");
                 }
             } else {
-                // Post directly to the third-party webhook endpoint for Stripe / PayPal
-                const res = await fetch("/api/webhooks/payment", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        provider: paymentMethod,
-                        bookingId: booking.id,
-                        clientEmail: booking.email,
-                        clientName: booking.name,
-                        amount: booking.price || 30,
-                        currency: booking.currency || "GBP",
-                        referenceId: `${paymentMethod.toUpperCase()}_CHECKOUT_${Date.now().toString().slice(-6)}`,
-                        package: booking.package || "Personal Training",
-                        description: `Client Checkout Completed - ${booking.package}`
-                    })
-                });
-
-                const result = await res.json();
-                if (result.success) {
-                    setPaidSuccess(true);
-                } else {
-                    alert(result.error || "Payment transaction could not be authorized.");
+                const stripeUrl = stripeCheckoutUrl(booking.package, booking.email, booking.id);
+                if (stripeUrl) {
+                    window.location.href = stripeUrl;
+                    return;
                 }
+                alert("Card payment isn't available for this package yet. Please choose Paystack or contact your coach.");
             }
         } catch (err) {
             console.error(err);
@@ -242,7 +225,7 @@ function CheckoutContent() {
                             <div className="md:col-span-7 bg-zinc-950 border border-white/10 rounded-[2rem] p-6 md:p-8 space-y-6">
                                 <div>
                                     <h3 className="text-xl font-black uppercase italic tracking-tight mb-3">Select Payment Method</h3>
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-2 gap-3">
                                         {/* Paystack Option */}
                                         <button
                                             type="button"
@@ -275,20 +258,6 @@ function CheckoutContent() {
                                             <span className="text-[8px] text-gray-400 font-mono">Apple Pay</span>
                                         </button>
 
-                                        {/* PayPal Option */}
-                                        <button
-                                            type="button"
-                                            onClick={() => setPaymentMethod("paypal")}
-                                            className={`p-4 rounded-xl border flex flex-col items-center gap-1.5 font-black uppercase text-xs tracking-wider transition-all cursor-pointer ${
-                                                paymentMethod === "paypal"
-                                                    ? "bg-blue-500/20 border-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]"
-                                                    : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
-                                            }`}
-                                        >
-                                            <span className="font-serif italic font-black text-lg">P</span>
-                                            <span>PayPal</span>
-                                            <span className="text-[8px] text-blue-400 font-mono">Express</span>
-                                        </button>
                                     </div>
                                 </div>
 
@@ -307,31 +276,15 @@ function CheckoutContent() {
                                             </div>
                                         </div>
                                     ) : (
-                                        <>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Cardholder Name</label>
-                                                <Input defaultValue={booking.name} required className="h-12 bg-white/5 border-white/10 font-bold" />
+                                        <div className="p-6 bg-primary/10 border border-primary/20 rounded-2xl space-y-3">
+                                            <div className="flex items-center gap-2 text-primary text-xs font-black uppercase tracking-wider">
+                                                <CreditCard className="h-4 w-4" />
+                                                <span>Secure Stripe Checkout</span>
                                             </div>
-
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Card Number</label>
-                                                <div className="relative">
-                                                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                                                    <Input defaultValue="4242 •••• •••• 4242" className="pl-12 h-12 bg-white/5 border-white/10 font-mono" />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Expiration</label>
-                                                    <Input defaultValue="12/28" className="h-12 bg-white/5 border-white/10 font-mono text-center" />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">CVC</label>
-                                                    <Input defaultValue="•••" className="h-12 bg-white/5 border-white/10 font-mono text-center" />
-                                                </div>
-                                            </div>
-                                        </>
+                                            <p className="text-xs text-gray-400 leading-relaxed">
+                                                You will be directed to Stripe&apos;s secure checkout to pay by card, Apple Pay or Revolut Pay.
+                                            </p>
+                                        </div>
                                     )}
 
                                     <Button
@@ -347,11 +300,11 @@ function CheckoutContent() {
                                             ? "Authorizing..."
                                             : paymentMethod === "paystack"
                                                 ? `Pay £${booking.price}.00 with Paystack ↗`
-                                                : `Authorize £${booking.price}.00 (${paymentMethod.toUpperCase()})`}
+                                                : `Pay £${booking.price}.00 with Stripe ↗`}
                                     </Button>
 
                                     <p className="text-[10px] font-bold text-center text-gray-500 uppercase tracking-widest flex items-center justify-center gap-2 mt-4">
-                                        <Lock className="h-3 w-3 text-primary" /> Verified Third-Party Webhook Synchronization
+                                        <Lock className="h-3 w-3 text-primary" /> Payments processed securely by our payment provider
                                     </p>
                                 </form>
                             </div>

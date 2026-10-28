@@ -98,12 +98,10 @@ export default function AdminPage() {
     }, []);
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const stored = sessionStorage.getItem("tthept_admin_auth");
-            if (stored === "true") {
-                setIsAuthenticated(true);
-            }
-        }
+        fetch("/api/auth")
+            .then((r) => r.json())
+            .then((data) => setIsAuthenticated(Boolean(data.authenticated)))
+            .catch(() => setIsAuthenticated(false));
     }, []);
 
     useEffect(() => {
@@ -112,20 +110,29 @@ export default function AdminPage() {
         }
     }, [isAuthenticated, fetchAllData]);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (password === "admin123") {
-            setIsAuthenticated(true);
-            sessionStorage.setItem("tthept_admin_auth", "true");
-            addToast("Command Center connection established.", "success");
-        } else {
-            addToast("Authentication rejected. Invalid protocol key.", "error");
+        try {
+            const res = await fetch("/api/auth", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password })
+            });
+            if (res.ok) {
+                setPassword("");
+                setIsAuthenticated(true);
+                addToast("Command Center connection established.", "success");
+            } else {
+                addToast("Authentication rejected. Invalid protocol key.", "error");
+            }
+        } catch {
+            addToast("Login service unavailable. Try again.", "error");
         }
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await fetch("/api/auth", { method: "DELETE" }).catch(() => {});
         setIsAuthenticated(false);
-        sessionStorage.removeItem("tthept_admin_auth");
     };
 
     // Quick Update Booking Status

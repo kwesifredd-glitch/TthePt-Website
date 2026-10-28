@@ -79,7 +79,11 @@ export async function POST(request: Request) {
             }
         }
 
-        // Demo / Sandbox Fallback when keys are still in setup mode
+        if (process.env.NODE_ENV === 'production') {
+            return NextResponse.json({ error: 'Card payments via Paystack are not available right now.' }, { status: 503 });
+        }
+
+        // Demo / Sandbox Fallback when keys are still in setup mode (local development only)
         return NextResponse.json({
             success: true,
             simulated: true,

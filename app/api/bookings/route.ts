@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { db, Booking, PaymentPlatform } from '@/lib/store';
+import { db, Booking } from '@/lib/store';
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { name, email, phone, date, time, package: packageName, price, paymentStatus, paymentMethod, goals } = body;
+        const { name, email, phone, date, time, package: packageName, price, goals } = body;
 
         if (!name || !email || !date || !time) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Slot no longer available' }, { status: 409 });
         }
 
-        const isPaid = paymentStatus === 'paid';
+        // Public bookings always start unpaid; only a verified payment or the admin can mark them paid
         const finalPrice = typeof price === 'number' ? price : 30;
         const bookingId = crypto.randomUUID ? crypto.randomUUID() : `bk_${Date.now()}`;
 
@@ -31,33 +31,14 @@ export async function POST(request: Request) {
             price: finalPrice,
             currency: 'GBP',
             status: 'confirmed',
-            paymentStatus: isPaid ? 'paid' : 'unpaid',
-            paymentMethod: paymentMethod || (isPaid ? 'card' : 'pending_gateway'),
-            paymentRef: isPaid ? `WEB_${Date.now().toString().slice(-6)}` : undefined,
-            paidAt: isPaid ? new Date().toISOString() : undefined,
+            paymentStatus: 'unpaid',
+            paymentMethod: 'pending_gateway',
             goals: goals || '',
             source: 'website_booking',
             createdAt: new Date().toISOString(),
         };
 
         db.addBooking(booking);
-
-        // If marked paid on submission, log in payment ledger
-        if (isPaid) {
-            db.addPayment({
-                id: `tx_${Date.now()}`,
-                bookingId: booking.id,
-                clientName: booking.name,
-                clientEmail: booking.email,
-                amount: finalPrice,
-                currency: 'GBP',
-                platform: (paymentMethod as PaymentPlatform) || 'stripe',
-                status: 'succeeded',
-                referenceId: booking.paymentRef || `TX-${Date.now().toString().slice(-6)}`,
-                description: `${booking.package} - Website Checkout`,
-                createdAt: new Date().toISOString()
-            });
-        }
 
         return NextResponse.json({ success: true, booking });
     } catch (error) {

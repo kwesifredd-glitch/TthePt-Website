@@ -86,20 +86,37 @@ type DB = {
     content: Content;
 };
 
+// Keys are read from environment variables only and are never written to db.json
+const SECRET_GATEWAY_FIELDS = [
+    'stripePublishableKey',
+    'stripeSecretKey',
+    'stripeWebhookSecret',
+    'paystackPublicKey',
+    'paystackSecretKey',
+    'paystackWebhookSecret',
+    'webhookSecretKey',
+] as const;
+
+function envGatewaySecrets(): Pick<GatewaySettings, typeof SECRET_GATEWAY_FIELDS[number]> {
+    return {
+        stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
+        stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
+        stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+        paystackPublicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+        paystackSecretKey: process.env.PAYSTACK_SECRET_KEY || '',
+        paystackWebhookSecret: process.env.PAYSTACK_WEBHOOK_SECRET || '',
+        webhookSecretKey: process.env.WEBHOOK_SECRET || '',
+    };
+}
+
 const defaultGatewaySettings: GatewaySettings = {
     stripeEnabled: true,
-    stripePublishableKey: 'pk_test_placeholder_key',
-    stripeSecretKey: 'sk_test_placeholder_key',
-    stripeWebhookSecret: 'whsec_demo_secret_key',
     paypalEnabled: false,
     paypalClientId: '',
     paypalWebhookId: '',
     paystackEnabled: true,
-    paystackPublicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-    paystackSecretKey: process.env.PAYSTACK_SECRET_KEY || '',
-    paystackWebhookSecret: process.env.PAYSTACK_WEBHOOK_SECRET || '',
-    webhookSecretKey: 'wh_secret_' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0, 12) : 'demo12345'),
-    currency: 'GBP'
+    currency: 'GBP',
+    ...envGatewaySecrets()
 };
 
 const defaultDB: DB = {
@@ -118,7 +135,7 @@ const defaultDB: DB = {
 
 function readDB(): DB {
     if (!fs.existsSync(DB_PATH)) {
-        fs.writeFileSync(DB_PATH, JSON.stringify(defaultDB, null, 2));
+        writeDB(defaultDB);
         return defaultDB;
     }
     try {
@@ -151,7 +168,8 @@ function readDB(): DB {
             availableHours: data.settings?.availableHours || defaultDB.settings.availableHours,
             gateway: {
                 ...defaultGatewaySettings,
-                ...(data.settings?.gateway || {})
+                ...(data.settings?.gateway || {}),
+                ...envGatewaySecrets()
             }
         };
 
@@ -168,7 +186,10 @@ function readDB(): DB {
 }
 
 function writeDB(db: DB) {
-    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+    const gateway: Partial<GatewaySettings> = { ...db.settings.gateway };
+    for (const field of SECRET_GATEWAY_FIELDS) delete gateway[field];
+    const safe = { ...db, settings: { ...db.settings, gateway } };
+    fs.writeFileSync(DB_PATH, JSON.stringify(safe, null, 2));
 }
 
 export const db = {

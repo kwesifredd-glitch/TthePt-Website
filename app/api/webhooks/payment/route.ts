@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
+import Stripe from 'stripe';
 import { db, Booking, Payment, PaymentPlatform } from '@/lib/store';
 
 export async function GET() {
@@ -18,7 +20,7 @@ export async function GET() {
                 referenceId: 'ch_12345 or PAYID-12345',
                 bookingId: 'optional_existing_booking_id',
                 package: '12 Sessions a month',
-                secret: 'optional_webhook_secret_key'
+                secret: 'required unless Stripe-signed: WEBHOOK_SECRET (or x-webhook-secret header)'
             },
             notes: 'Native Stripe webhook payloads (checkout.session.completed, payment_intent.succeeded) and PayPal webhook payloads (PAYMENT.CAPTURE.COMPLETED) are automatically parsed.'
         },
@@ -100,6 +102,25 @@ export async function POST(request: Request) {
         const headersList = request.headers;
         const stripeSignature = headersList.get('stripe-signature');
         const settings = db.getSettings();
+
+        // Only accept events that prove they came from Stripe, or from a sender holding WEBHOOK_SECRET
+        if (stripeSignature) {
+            const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+            if (!stripeWebhookSecret) {
+                return NextResponse.json({ error: 'Stripe webhooks are not configured' }, { status: 503 });
+            }
+            try {
+                Stripe.webhooks.constructEvent(bodyText, stripeSignature, stripeWebhookSecret);
+            } catch {
+                return NextResponse.json({ error: 'Invalid Stripe signature' }, { status: 401 });
+            }
+        } else {
+            const expected = process.env.WEBHOOK_SECRET || '';
+            const provided = headersList.get('x-webhook-secret') || payload.secret || '';
+            if (!expected || provided.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected))) {
+                return NextResponse.json({ error: 'Unauthorized webhook' }, { status: 401 });
+            }
+        }
 
         // Standardized extraction variables
         let provider: PaymentPlatform = 'webhook';

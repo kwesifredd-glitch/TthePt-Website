@@ -6,7 +6,9 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const reference = searchParams.get('reference');
         const bookingId = searchParams.get('bookingId');
-        const simulated = searchParams.get('simulated') === 'true';
+        // Simulated payments are a local-development convenience only
+        const allowSimulation = process.env.NODE_ENV !== 'production';
+        const simulated = allowSimulation && searchParams.get('simulated') === 'true';
 
         if (!reference) {
             return NextResponse.json({ error: 'Missing payment reference' }, { status: 400 });
@@ -48,9 +50,11 @@ export async function GET(request: Request) {
             const lname = trans.customer?.last_name || '';
             clientName = `${fname} ${lname}`.trim() || trans.metadata?.clientName || clientEmail;
             verifiedBookingId = trans.metadata?.bookingId || verifiedBookingId;
-        } else {
+        } else if (simulated || (!isRealKey && allowSimulation)) {
             // Simulated verification
             amount = 30;
+        } else {
+            return NextResponse.json({ success: false, error: 'Payment could not be verified' }, { status: 400 });
         }
 
         // Match and update the booking in local store
