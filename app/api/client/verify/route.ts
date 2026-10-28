@@ -1,104 +1,63 @@
 import { NextResponse } from 'next/server';
-import { db, Booking, Inquiry } from '@/lib/store';
+import { db } from '@/lib/store';
+import { cleanEmail, optionalText } from '@/lib/validation';
 
+// Unlocks the meal plans page. A quick signup is saved as a website lead (not a booking),
+// and lookups never return stored client details, only whether the email is known.
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email, name, quickSignup, objective } = body;
+        const email = cleanEmail(body.email);
 
-        const cleanEmail = (email || '').trim().toLowerCase();
-
-        if (!cleanEmail) {
+        if (!email) {
             return NextResponse.json(
-                { success: false, message: 'Please provide a valid client email address.' },
+                { success: false, message: 'Please enter a valid email address.' },
                 { status: 400 }
             );
         }
 
-        // If quick signup is requested directly from the protocol clearance modal
-        if (quickSignup) {
-            const clientName = (name || '').trim() || cleanEmail.split('@')[0];
-            const bookingId = crypto.randomUUID ? crypto.randomUUID() : `bk_${Date.now()}`;
-            const today = new Date().toISOString().split('T')[0];
-
-            const newBooking: Booking = {
-                id: bookingId,
-                name: clientName,
-                email: cleanEmail,
-                date: today,
-                time: '12:00',
-                package: 'Tactical Clearance Registration',
-                price: 0,
-                currency: 'GBP',
-                status: 'confirmed',
-                paymentStatus: 'paid',
-                goals: objective || 'Nutritional Protocol Clearance',
-                source: 'website_booking',
+        if (body.quickSignup) {
+            const name = optionalText(body.name, 100) || email.split('@')[0];
+            await db.addInquiry({
+                id: `inq_${crypto.randomUUID()}`,
+                name,
+                email,
+                objective: optionalText(body.objective, 1000) || 'Meal plans signup',
+                status: 'new',
                 createdAt: new Date().toISOString()
-            };
-
-            await db.addBooking(newBooking);
+            });
 
             return NextResponse.json({
                 success: true,
                 verified: true,
-                client: {
-                    name: newBooking.name,
-                    email: newBooking.email,
-                    package: newBooking.package
-                },
-                message: 'Client profile registered. Full operational clearance granted.'
+                client: { name, email },
+                message: 'You\'re signed up. Meal plans unlocked.'
             });
         }
 
-        // Verify against existing bookings
-        const bookings = await db.getBookings();
-        const matched = bookings.find(
-            b => b.email && b.email.trim().toLowerCase() === cleanEmail
-        );
+        const [bookings, inquiries] = await Promise.all([db.getBookings(), db.getInquiries()]);
+        const known = bookings.some(b => b.email?.trim().toLowerCase() === email)
+            || inquiries.some(i => i.email?.trim().toLowerCase() === email);
 
-        if (matched) {
+        if (known) {
             return NextResponse.json({
                 success: true,
                 verified: true,
-                client: {
-                    name: matched.name,
-                    email: matched.email,
-                    package: matched.package || 'Enrolled Trainee'
-                },
-                message: `Identity confirmed: Welcome back, ${matched.name || 'Trainee'}. Clearance granted.`
-            });
-        }
-
-        // Also check inquiries as a fallback
-        const inquiries: Inquiry[] = await db.getInquiries();
-        const matchedInquiry = inquiries.find(
-            (i: Inquiry) => i.email && i.email.trim().toLowerCase() === cleanEmail
-        );
-
-        if (matchedInquiry) {
-            return NextResponse.json({
-                success: true,
-                verified: true,
-                client: {
-                    name: matchedInquiry.name,
-                    email: matchedInquiry.email,
-                    package: 'Registered Lead'
-                },
-                message: `Inquiry clearance acknowledged for ${matchedInquiry.name}. Full protocols unlocked.`
+                client: { name: '', email },
+                message: 'Welcome back. Meal plans unlocked.'
             });
         }
 
         return NextResponse.json({
             success: false,
             verified: false,
-            message: 'No client profile found for this email. Complete an intake booking to activate full clearance.'
+            message: 'We couldn\'t find that email. Sign up below or book a session to unlock the meal plans.'
         }, { status: 404 });
 
     } catch (error) {
-        console.error('Error verifying client clearance:', error);
+        console.error('Error verifying client:', error);
         return NextResponse.json(
-            { success: false, message: 'Server verification error. Please try again.' },
+            { success: false, message: 'Something went wrong. Please try again.' },
             { status: 500 }
         );
     }

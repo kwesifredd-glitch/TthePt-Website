@@ -16,7 +16,6 @@ import {
     CreditCard,
     Calendar as CalendarIcon,
     User,
-    ShieldCheck,
     Zap,
     ChevronRight,
     Lock,
@@ -25,37 +24,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STRIPE_PAYMENT_LINKS, stripeCheckoutUrl } from "@/lib/payment-links";
+import { PACKAGES } from "@/lib/packages";
 
-const packages = [
-    {
-        id: "single",
-        name: "1-to-1 session",
-        price: 30,
-        desc: "Single precise tactical deployment.",
-        highlight: false
-    },
-    {
-        id: "biweekly",
-        name: "2 days a week",
-        price: 55,
-        desc: "Strategic dual-day rhythm for sustained progression.",
-        highlight: false
-    },
-    {
-        id: "weekly",
-        name: "3x a week",
-        price: 75,
-        desc: "High-frequency operational rhythm.",
-        highlight: true
-    },
-    {
-        id: "monthly",
-        name: "12 Sessions a month",
-        price: 280,
-        desc: "Elite sustained detached command.",
-        highlight: false
-    }
-];
+const packages = PACKAGES;
+
 
 export default function BookingPage() {
     const [selectedPackage, setSelectedPackage] = useState(packages.find(p => p.highlight) || packages[2]);
@@ -66,10 +38,17 @@ export default function BookingPage() {
     const [formData, setFormData] = useState({ name: "", email: "" });
     const [isLoading, setIsLoading] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [returnedFromPayment, setReturnedFromPayment] = useState(false);
     const hasStripeLink = Boolean(STRIPE_PAYMENT_LINKS[selectedPackage.name]);
 
     useEffect(() => {
         setIsMounted(true);
+        // Stripe sends clients back to /booking?paid=1 after checkout
+        if (new URLSearchParams(window.location.search).get("paid") === "1") {
+            setReturnedFromPayment(true);
+            setStep("success");
+        }
     }, []);
 
     // Fetch slots when date changes
@@ -106,6 +85,7 @@ export default function BookingPage() {
     const handleConfirmBooking = async () => {
         if (!date || !selectedSlot) return;
         setIsLoading(true);
+        setError(null);
 
         try {
             const res = await fetch("/api/bookings", {
@@ -116,8 +96,7 @@ export default function BookingPage() {
                     email: formData.email,
                     date: format(date, "yyyy-MM-dd"),
                     time: selectedSlot,
-                    package: selectedPackage.name,
-                    price: selectedPackage.price
+                    package: selectedPackage.name
                 })
             });
 
@@ -136,21 +115,28 @@ export default function BookingPage() {
                 }
                 setStep("success");
             } else {
-                alert("Booking failed. Please try again.");
+                const data = await res.json().catch(() => ({}));
+                setError(data.error || "Booking failed. Please try again.");
+                if (res.status === 409) {
+                    // Someone else took the slot: refresh the times and go back to pick another
+                    setSelectedSlot(null);
+                    setDate(date ? new Date(date) : undefined);
+                    setStep("calendar");
+                }
             }
-        } catch (error) {
-            console.error("Booking failed", error);
-            alert("An error occurred.");
+        } catch (err) {
+            console.error("Booking failed", err);
+            setError("We couldn't reach the server. Check your connection and try again.");
         } finally {
             setIsLoading(false);
         }
     };
 
     const steps = [
-        { id: "tier", label: "01. TIER", icon: Zap },
-        { id: "calendar", label: "02. TIMING", icon: CalendarIcon },
-        { id: "details", label: "03. IDENTITY", icon: User },
-        { id: "payment", label: "04. ACCESS", icon: Lock },
+        { id: "tier", label: "01. PACKAGE", icon: Zap },
+        { id: "calendar", label: "02. DATE & TIME", icon: CalendarIcon },
+        { id: "details", label: "03. DETAILS", icon: User },
+        { id: "payment", label: "04. CONFIRM", icon: Lock },
     ];
 
     const stepOrder = ["tier", "calendar", "details", "payment", "success"];
@@ -171,13 +157,13 @@ export default function BookingPage() {
                     <div className="flex flex-col items-center text-center mb-12 md:mb-16 px-4">
                         <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-xl text-[10px] font-black tracking-[0.4em] uppercase mb-4 md:mb-6 border border-primary/20 backdrop-blur-md">
                             <Activity className="h-3 w-3 animate-pulse" />
-                            Secure Intake Protocol Active
+                            Book Your Session
                         </div>
                         <h1 className="text-4xl sm:text-6xl md:text-8xl font-black italic uppercase tracking-tighter mb-4 sm:mb-6 leading-none">
-                            INTAKE <span className="text-primary not-italic">SESSION</span>
+                            BOOK A <span className="text-primary not-italic">SESSION</span>
                         </h1>
                         <p className="text-gray-400 text-base md:text-xl font-bold max-w-2xl mx-auto italic leading-relaxed">
-                            Selection of serious applicants only. Precise data entry required for biomechanical evaluation.
+                            Pick a package, choose a time that suits you, and you&apos;re booked in four quick steps.
                         </p>
                     </div>
 
@@ -205,7 +191,7 @@ export default function BookingPage() {
                                             <s.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                                         </div>
                                         <span className={cn(
-                                            "mt-2 sm:mt-4 text-[9px] sm:text-[10px] font-black tracking-[0.15em] sm:tracking-[0.2em] transition-colors duration-500",
+                                            "mt-2 sm:mt-4 text-[10px] sm:text-[10px] font-black tracking-[0.15em] sm:tracking-[0.2em] transition-colors duration-500",
                                             isActive ? "text-primary" : isCompleted ? "text-white" : "text-gray-500"
                                         )}>
                                             {s.label}
@@ -218,18 +204,16 @@ export default function BookingPage() {
 
                     {/* Main Stage */}
                     <div className="max-w-5xl mx-auto">
-                        <Card className="bg-zinc-900/60 border-white/10 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-[2.5rem] md:rounded-[3rem] overflow-hidden min-h-[550px] md:min-h-[650px] flex flex-col">
+                        <Card className="glass-card rounded-[2.5rem] md:rounded-[3rem] overflow-hidden min-h-[550px] md:min-h-[650px] flex flex-col">
                             {/* Top Accent Line */}
                             <div className="h-1.5 w-full bg-gradient-to-r from-transparent via-primary to-transparent opacity-80"></div>
 
                             <CardContent className="flex-1 p-6 sm:p-10 md:p-16 relative">
-                                {/* Atmospheric Elements */}
-                                <div className="absolute top-8 right-8 flex gap-4 opacity-30 hidden md:flex">
-                                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
-                                        LATENCY: 12ms<br />STATUS: ENCRYPTED
+                                {error && (
+                                    <div role="alert" className="mb-8 p-4 rounded-2xl border border-red-500/30 bg-red-500/10 text-sm font-bold text-red-300">
+                                        {error}
                                     </div>
-                                    <ShieldCheck className="h-8 w-8 text-white" />
-                                </div>
+                                )}
 
                                 <AnimatePresence mode="wait">
                                     {step === "tier" && (
@@ -241,9 +225,9 @@ export default function BookingPage() {
                                             transition={{ duration: 0.3 }}
                                         >
                                             <div className="text-center mb-10 md:mb-16 space-y-3">
-                                                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase italic tracking-tighter">SELECT <span className="text-primary not-italic">COMMAND</span> TIER</h2>
+                                                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase italic tracking-tighter">CHOOSE YOUR <span className="text-primary not-italic">PACKAGE</span></h2>
                                                 <p className="text-gray-400 font-bold text-xs sm:text-sm tracking-tight italic max-w-xl mx-auto">
-                                                    Choose the intensity of your detachment protocol. High-performing results require specific operational frequency.
+                                                    How often do you want to train? You can change package later by talking to your coach.
                                                 </p>
                                             </div>
 
@@ -255,12 +239,12 @@ export default function BookingPage() {
                                                         className={cn(
                                                             "relative p-6 sm:p-7 lg:p-5 xl:p-7 rounded-[2rem] border-2 transition-all duration-500 flex flex-col text-left group overflow-hidden active:scale-98",
                                                             selectedPackage.id === pkg.id
-                                                                ? "bg-primary/20 border-primary shadow-[0_0_30px_rgba(255,77,0,0.25)] bg-gradient-to-br from-primary/15 to-transparent scale-[1.02]"
-                                                                : "bg-black/40 border-white/10 hover:border-white/20"
+                                                                ? "glass-card border-primary shadow-[0_0_30px_rgba(255,77,0,0.25)] scale-[1.02]"
+                                                                : "glass-card border-white/10 hover:border-white/25"
                                                         )}
                                                     >
                                                         {pkg.highlight && (
-                                                            <div className="absolute top-4 right-4 bg-primary text-white text-[8px] font-black tracking-widest px-2.5 py-1 rounded-full italic shadow-md">MOST ACTIVE</div>
+                                                            <div className="absolute top-4 right-4 bg-primary text-white text-[10px] font-black tracking-widest px-2.5 py-1 rounded-full italic shadow-md">MOST ACTIVE</div>
                                                         )}
 
                                                         <h4 className={cn(
@@ -274,7 +258,7 @@ export default function BookingPage() {
                                                         </p>
                                                         <div className="mt-auto">
                                                             <p className="text-2xl sm:text-3xl font-black italic tracking-tighter text-white">£{pkg.price}</p>
-                                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Protocol Valuation</p>
+                                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Price</p>
                                                         </div>
                                                     </button>
                                                 ))}
@@ -311,7 +295,7 @@ export default function BookingPage() {
                                                             </button>
                                                             <div className="h-[1px] flex-1 bg-white/10"></div>
                                                         </div>
-                                                        <h2 className="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter">SELECT <br /><span className="text-primary not-italic">DEPLOYMENT</span></h2>
+                                                        <h2 className="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter">PICK A <br /><span className="text-primary not-italic">DATE & TIME</span></h2>
                                                         <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-3.5 py-1.5 rounded-xl">
                                                             <Zap className="h-3 w-3 text-primary" />
                                                             <span className="text-[10px] font-black uppercase tracking-widest text-primary">{selectedPackage.name} SELECTED</span>
@@ -335,19 +319,19 @@ export default function BookingPage() {
 
                                                 <div className="space-y-6">
                                                     <div className="flex items-center justify-between">
-                                                        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary">Windows Detected</h3>
+                                                        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary">Available times</h3>
                                                         {date && <span className="text-xs font-bold text-white/50 uppercase tracking-widest">{format(date, "MMMM dd")}</span>}
                                                     </div>
 
                                                     {!date ? (
                                                         <div className="h-[280px] sm:h-[350px] flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-[2rem] text-center p-6">
                                                             <CalendarIcon className="h-10 w-10 text-white/10 mb-3" />
-                                                            <p className="text-xs font-black text-gray-500 uppercase tracking-widest">Awaiting Date Selection</p>
+                                                            <p className="text-xs font-black text-gray-500 uppercase tracking-widest">Pick a date to see times</p>
                                                         </div>
                                                     ) : slots.length === 0 ? (
                                                         <div className="h-[280px] sm:h-[350px] flex flex-col items-center justify-center bg-red-500/5 border border-red-500/10 rounded-[2rem] text-center p-6">
                                                             <Activity className="h-10 w-10 text-red-500/30 mb-3" />
-                                                            <p className="text-xs font-black text-red-400 uppercase tracking-widest">Protocol Capacity Full</p>
+                                                            <p className="text-xs font-black text-red-400 uppercase tracking-widest">Fully booked. Try another day</p>
                                                         </div>
                                                     ) : (
                                                         <div className="grid grid-cols-2 gap-3 sm:gap-4 max-h-[350px] overflow-y-auto pr-1">
@@ -392,31 +376,33 @@ export default function BookingPage() {
                                             className="max-w-2xl mx-auto"
                                         >
                                             <div className="text-center mb-8 sm:mb-12 space-y-3">
-                                                <h2 className="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter">Identity <span className="text-primary not-italic">Hash</span></h2>
+                                                <h2 className="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter">Your <span className="text-primary not-italic">Details</span></h2>
                                                 <p className="text-gray-400 font-bold text-xs sm:text-sm tracking-tight italic">
-                                                    All intake data is processed through our secure encryption layer.
+                                                    We only use these to confirm your booking and contact you about your sessions.
                                                 </p>
                                             </div>
 
                                             <form onSubmit={handleNextToPayment} className="space-y-6 sm:space-y-8">
                                                 <div className="space-y-5">
                                                     <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Legal Designation</label>
+                                                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Full name</label>
                                                         <Input
                                                             required
-                                                            placeholder="MARCUS AURELIUS"
-                                                            className="h-16 sm:h-20 bg-black/40 border-white/10 rounded-2xl focus:ring-primary focus:border-primary font-black text-xl sm:text-2xl placeholder:text-white/10 uppercase italic px-6 sm:px-8"
+                                                            placeholder="Your full name"
+                                                            autoComplete="name"
+                                                            className="h-16 sm:h-20 bg-black/40 border-white/10 rounded-2xl focus:ring-primary focus:border-primary font-black text-xl sm:text-2xl placeholder:text-white/20 italic px-6 sm:px-8"
                                                             value={formData.name}
                                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Communication Signal</label>
+                                                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Email</label>
                                                         <Input
                                                             required
                                                             type="email"
-                                                            placeholder="YOU@ELITE.PT"
-                                                            className="h-16 sm:h-20 bg-black/40 border-white/10 rounded-2xl focus:ring-primary focus:border-primary font-black text-xl sm:text-2xl placeholder:text-white/10 uppercase italic px-6 sm:px-8"
+                                                            placeholder="you@example.com"
+                                                            autoComplete="email"
+                                                            className="h-16 sm:h-20 bg-black/40 border-white/10 rounded-2xl focus:ring-primary focus:border-primary font-black text-xl sm:text-2xl placeholder:text-white/20 italic px-6 sm:px-8"
                                                             value={formData.email}
                                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                                         />
@@ -426,16 +412,16 @@ export default function BookingPage() {
                                                 <div className="p-6 sm:p-8 bg-primary/5 border border-primary/20 rounded-[2rem] flex items-start gap-4 sm:gap-6 relative overflow-hidden">
                                                     <Target className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0 mt-0.5" />
                                                     <div className="space-y-1 sm:space-y-2">
-                                                        <p className="text-xs font-black uppercase tracking-widest text-primary">Intake Terminus</p>
+                                                        <p className="text-xs font-black uppercase tracking-widest text-primary">Before you book</p>
                                                         <p className="text-xs sm:text-sm text-gray-400 font-bold leading-relaxed italic">
-                                                            You acknowledge that elite performance requires 100% adherence to our physiological protocols.
+                                                            If you need to change or cancel, just get in touch with your coach as early as you can.
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                                                    <Button type="button" variant="ghost" className="h-14 sm:h-16 px-6 rounded-full text-white/40 hover:text-white font-black uppercase tracking-widest order-2 sm:order-1" onClick={() => setStep("calendar")}>Recalibrate</Button>
-                                                    <Button type="submit" className="flex-1 h-14 sm:h-16 rounded-full font-black uppercase tracking-[0.25em] bg-primary text-white hover:bg-orange-600 shadow-xl order-1 sm:order-2">Secure Slot</Button>
+                                                    <Button type="button" variant="ghost" className="h-14 sm:h-16 px-6 rounded-full text-white/40 hover:text-white font-black uppercase tracking-widest order-2 sm:order-1" onClick={() => setStep("calendar")}>Back</Button>
+                                                    <Button type="submit" className="flex-1 h-14 sm:h-16 rounded-full font-black uppercase tracking-[0.25em] bg-primary text-white hover:bg-orange-600 shadow-xl order-1 sm:order-2">Continue</Button>
                                                 </div>
                                             </form>
                                         </motion.div>
@@ -452,12 +438,12 @@ export default function BookingPage() {
                                         >
                                             <div className="grid md:grid-cols-12 gap-8 md:gap-12">
                                                 <div className="md:col-span-12 text-center mb-4 md:mb-8">
-                                                    <h2 className="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter">ACCESS <span className="text-primary not-italic">AUTHORIZATION</span></h2>
+                                                    <h2 className="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter">CONFIRM <span className="text-primary not-italic">BOOKING</span></h2>
                                                 </div>
 
                                                 <div className="md:col-span-5 space-y-4 sm:space-y-6">
-                                                    <div className="p-6 sm:p-8 bg-black/60 rounded-[2rem] border border-white/10 relative overflow-hidden shadow-2xl">
-                                                        <div className="absolute top-0 right-0 p-3 bg-primary text-white text-[8px] font-black tracking-[0.2em] rounded-bl-xl italic">INTAKE FEE</div>
+                                                    <div className="p-6 sm:p-8 glass-card rounded-[2rem] relative overflow-hidden">
+                                                        <div className="absolute top-0 right-0 p-3 bg-primary text-white text-[10px] font-black tracking-[0.2em] rounded-bl-xl italic">PACKAGE</div>
                                                         <div className="space-y-1 mt-2">
                                                             <p className="text-4xl sm:text-5xl font-black text-white italic tracking-tighter leading-none">£{selectedPackage.price}.00</p>
                                                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{selectedPackage.name.toUpperCase()}</p>
@@ -465,12 +451,12 @@ export default function BookingPage() {
 
                                                         <div className="mt-8 pt-6 border-t border-white/10 space-y-3">
                                                             <div className="flex justify-between items-center text-[10px] font-black tracking-widest text-gray-400">
-                                                                <span>VALUATION</span>
+                                                                <span>PRICE</span>
                                                                 <span className="text-white">£{selectedPackage.price}.00</span>
                                                             </div>
                                                             <div className="flex justify-between items-center text-[10px] font-black tracking-widest text-gray-400">
-                                                                <span>SECURE CHANNEL</span>
-                                                                <span className="text-primary">FREE</span>
+                                                                <span>BOOKING FEE</span>
+                                                                <span className="text-primary">NONE</span>
                                                             </div>
                                                             <div className="pt-3 flex justify-between items-center">
                                                                 <span className="text-[10px] font-black tracking-widest text-white">TOTAL</span>
@@ -479,10 +465,6 @@ export default function BookingPage() {
                                                         </div>
                                                     </div>
 
-                                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10 flex items-center gap-3">
-                                                        <Zap className="h-5 w-5 text-primary shrink-0" />
-                                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Instant synchronization post-access</p>
-                                                    </div>
                                                 </div>
 
                                                 <form onSubmit={(e) => { e.preventDefault(); handleConfirmBooking(); }} className="md:col-span-7 space-y-6">
@@ -508,7 +490,7 @@ export default function BookingPage() {
                                                                 ? "Synchronizing..."
                                                                 : hasStripeLink
                                                                     ? `PAY £${selectedPackage.price}.00 WITH STRIPE ↗`
-                                                                    : "ACTIVATE COMMITMENT"}
+                                                                    : "CONFIRM BOOKING"}
                                                         </Button>
                                                         <button
                                                             type="button"
@@ -516,7 +498,7 @@ export default function BookingPage() {
                                                             onClick={() => setStep("details")}
                                                             disabled={isLoading}
                                                         >
-                                                            Revise Profile Identity
+                                                            Edit my details
                                                         </button>
                                                     </div>
                                                 </form>
@@ -540,13 +522,14 @@ export default function BookingPage() {
                                             </div>
 
                                             <h2 className="text-4xl sm:text-6xl md:text-8xl font-black italic uppercase tracking-tighter mb-4 sm:mb-6 leading-none">
-                                                PROTOCOL <span className="text-primary not-italic">LIVE</span>
+                                                {returnedFromPayment ? "THANK" : "YOU'RE"} <span className="text-primary not-italic">{returnedFromPayment ? "YOU" : "BOOKED"}</span>
                                             </h2>
 
-                                            <div className="bg-black/50 backdrop-blur-md p-6 sm:p-10 rounded-[2.5rem] border border-white/10 max-w-xl w-full mb-8 sm:mb-12 shadow-inner relative overflow-hidden">
+                                            <div className="glass-card p-6 sm:p-10 rounded-[2.5rem] max-w-xl w-full mb-8 sm:mb-12 shadow-inner relative overflow-hidden">
                                                 <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
-                                                <p className="text-xs font-black text-primary uppercase tracking-[0.4em] mb-4 sm:mb-6">INTAKE CONFIRMED</p>
+                                                <p className="text-xs font-black text-primary uppercase tracking-[0.4em] mb-4 sm:mb-6">{returnedFromPayment ? "PAYMENT COMPLETE" : "BOOKING CONFIRMED"}</p>
 
+                                                {!returnedFromPayment && (<>
                                                 <div className="flex justify-center gap-8 sm:gap-12 items-baseline mb-6 sm:mb-8">
                                                     <div className="text-left">
                                                         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">DATE</p>
@@ -559,13 +542,17 @@ export default function BookingPage() {
                                                 </div>
 
                                                 <div className="pt-6 border-t border-white/10 text-center">
-                                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">OPERATIONAL TIER</p>
+                                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">PACKAGE</p>
                                                     <p className="text-xl sm:text-2xl font-black text-primary italic uppercase">{selectedPackage.name}</p>
                                                 </div>
 
-                                                <div className="pt-6 border-t border-white/10">
+                                                </>)}
+
+                                                <div className={cn(!returnedFromPayment && "pt-6 border-t border-white/10")}>
                                                     <p className="text-xs sm:text-sm font-bold text-gray-400 leading-relaxed italic">
-                                                        Deployment packet dispatched to <span className="text-white font-black underline decoration-primary decoration-2 sm:decoration-4">{formData.email}</span>.
+                                                        {returnedFromPayment
+                                                            ? "Stripe will email you a receipt. Your coach will be in touch to confirm your sessions."
+                                                            : "Your coach will be in touch to confirm. Payment is settled at your first session."}
                                                     </p>
                                                 </div>
                                             </div>
@@ -573,12 +560,12 @@ export default function BookingPage() {
                                             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-md">
                                                 <Button asChild className="w-full sm:w-auto h-16 px-8 sm:px-10 rounded-full bg-primary text-white font-black uppercase tracking-[0.2em] hover:bg-orange-600 transition-all shadow-xl group">
                                                     <Link href="/meal-plans" className="flex items-center gap-2">
-                                                        <span>View Protocols & Recon</span>
+                                                        <span>View Meal Plans</span>
                                                         <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                                     </Link>
                                                 </Button>
                                                 <Button asChild variant="outline" className="w-full sm:w-auto h-16 px-8 rounded-full border-white/20 bg-transparent text-white font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
-                                                    <Link href="/">Return to Ops</Link>
+                                                    <Link href="/">Back to Home</Link>
                                                 </Button>
                                             </div>
                                         </motion.div>
@@ -590,10 +577,10 @@ export default function BookingPage() {
                             <div className="bg-black/80 border-t border-white/5 p-4 sm:p-6 md:px-16 flex justify-between items-center mt-auto">
                                 <div className="flex items-center gap-3">
                                     <div className="w-2 h-2 rounded-full bg-primary animate-ping"></div>
-                                    <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-gray-400 uppercase">System Secure</span>
+                                    <span className="text-[10px] sm:text-[10px] font-black tracking-widest text-gray-400 uppercase">TthePT Booking</span>
                                 </div>
-                                <div className="text-[9px] sm:text-[10px] font-black tracking-widest text-gray-500 uppercase hidden sm:block italic">
-                                    TthePT // Biomechanical Intake Protocol v4.2.0
+                                <div className="text-[10px] sm:text-[10px] font-black tracking-widest text-gray-500 uppercase hidden sm:block italic">
+                                    Questions? Get in touch on the contact page
                                 </div>
                             </div>
                         </Card>

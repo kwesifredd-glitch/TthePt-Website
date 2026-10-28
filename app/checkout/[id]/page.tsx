@@ -20,6 +20,7 @@ function CheckoutContent() {
     const [error, setError] = useState("");
     const [processing, setProcessing] = useState(false);
     const [paidSuccess, setPaidSuccess] = useState(false);
+    const [payError, setPayError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!bookingId) return;
@@ -55,10 +56,10 @@ function CheckoutContent() {
                 window.location.href = stripeUrl;
                 return;
             }
-            alert("Online payment isn't available for this package yet. Please contact your coach to pay.");
+            setPayError("Online payment isn't available for this package yet. Please contact your coach to pay.");
         } catch (err) {
             console.error(err);
-            alert("A transmission error occurred while processing payment.");
+            setPayError("Something went wrong opening the payment page. Please try again.");
         } finally {
             setProcessing(false);
         }
@@ -95,7 +96,7 @@ function CheckoutContent() {
                     <div className="text-center mb-10">
                         <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase mb-4 border border-primary/20">
                             <ShieldCheck className="h-4 w-4" />
-                            Encrypted 256-Bit SSL Checkout
+                            Secure Checkout
                         </div>
                         <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter">
                             Authorized <span className="text-primary not-italic">Payment Gateway</span>
@@ -103,7 +104,7 @@ function CheckoutContent() {
                     </div>
 
                     {paidSuccess ? (
-                        <Card className="bg-zinc-950 border-primary/30 p-8 md:p-12 rounded-[2.5rem] text-center shadow-[0_0_60px_rgba(255,77,0,0.2)]">
+                        <Card className="glass-card border-primary/30 p-8 md:p-12 rounded-[2.5rem] text-center shadow-[0_0_60px_rgba(255,77,0,0.2)]">
                             <div className="w-20 h-20 rounded-full bg-primary/20 text-primary flex items-center justify-center mx-auto mb-6">
                                 <CheckCircle2 className="h-10 w-10 text-primary" />
                             </div>
@@ -138,7 +139,7 @@ function CheckoutContent() {
                     ) : (
                         <div className="grid md:grid-cols-12 gap-8 items-start">
                             {/* Summary Card */}
-                            <div className="md:col-span-5 bg-zinc-950 border border-white/10 rounded-[2rem] p-6 md:p-8 space-y-6">
+                            <div className="md:col-span-5 glass-card rounded-[2rem] p-6 md:p-8 space-y-6">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black uppercase tracking-widest text-primary">Protocol Invoice</p>
                                     <h3 className="text-2xl font-black uppercase italic tracking-tight">{booking.package}</h3>
@@ -176,10 +177,15 @@ function CheckoutContent() {
                             </div>
 
                             {/* Payment Form */}
-                            <div className="md:col-span-7 bg-zinc-950 border border-white/10 rounded-[2rem] p-6 md:p-8 space-y-6">
+                            <div className="md:col-span-7 glass-card rounded-[2rem] p-6 md:p-8 space-y-6">
                                 <h3 className="text-xl font-black uppercase italic tracking-tight">Payment</h3>
 
                                 <form onSubmit={handlePayNow} className="space-y-4">
+                                    {payError && (
+                                        <div role="alert" className="p-4 rounded-2xl border border-red-500/30 bg-red-500/10 text-sm font-bold text-red-300">
+                                            {payError}
+                                        </div>
+                                    )}
                                         <div className="p-6 bg-primary/10 border border-primary/20 rounded-2xl space-y-3">
                                             <div className="flex items-center gap-2 text-primary text-xs font-black uppercase tracking-wider">
                                                 <CreditCard className="h-4 w-4" />

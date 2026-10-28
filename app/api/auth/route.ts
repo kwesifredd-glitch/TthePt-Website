@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE, SESSION_MAX_AGE, checkAdminPassword, createSessionToken, verifySessionToken } from '@/lib/auth';
+import { clientIp, isRateLimited, recordFailure } from '@/lib/rate-limit';
+
+// Lock out an address after 10 wrong passwords for 15 minutes
+const MAX_FAILURES = 10;
+const LOCKOUT_SECONDS = 15 * 60;
 
 // Session status for the admin page
 export async function GET() {
@@ -11,8 +16,14 @@ export async function GET() {
 // Log in
 export async function POST(request: Request) {
     try {
+        const limitKey = `tthept:login-fail:${clientIp(request)}`;
+        if (await isRateLimited(limitKey, MAX_FAILURES)) {
+            return NextResponse.json({ error: 'Too many attempts. Try again in 15 minutes.' }, { status: 429 });
+        }
+
         const { password } = await request.json();
         if (!checkAdminPassword(password)) {
+            await recordFailure(limitKey, LOCKOUT_SECONDS);
             // Small delay to slow down password guessing
             await new Promise(resolve => setTimeout(resolve, 800));
             return NextResponse.json({ error: 'Invalid password' }, { status: 401 });

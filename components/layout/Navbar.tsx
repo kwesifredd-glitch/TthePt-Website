@@ -55,7 +55,7 @@ const Navbar = () => {
                     <span className="text-2xl md:text-3xl font-black tracking-tighter text-white group-hover:text-primary transition-colors">
                         Tthe<span className="text-primary italic group-hover:text-white transition-colors">PT</span>
                     </span>
-                    <span className="text-[9px] font-black italic tracking-[0.15em] text-primary/90 mt-0.5 uppercase">
+                    <span className="text-[10px] font-black italic tracking-[0.15em] text-primary/90 mt-0.5 uppercase">
                         Personal Trainer
                     </span>
                 </Link>

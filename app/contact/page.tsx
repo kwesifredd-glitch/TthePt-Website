@@ -16,10 +16,12 @@ export default function ContactPage() {
         email: "",
         objective: ""
     });
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus("submitting");
+        setSubmitError(null);
         try {
             const res = await fetch("/api/contact", {
                 method: "POST",
@@ -33,11 +35,13 @@ export default function ContactPage() {
             if (res.ok) {
                 setStatus("success");
             } else {
-                alert("Failed to submit inquiry. Please try again.");
+                const data = await res.json().catch(() => ({}));
+                setSubmitError(data.error || "Your message didn't send. Please try again.");
                 setStatus("idle");
             }
         } catch (error) {
             console.error("Submission failed", error);
+            setSubmitError("We couldn't reach the server. Check your connection and try again.");
             setStatus("idle");
         }
     };
@@ -120,7 +124,7 @@ export default function ContactPage() {
                             </div>
 
                             {/* Contact Form */}
-                            <div className="md:col-span-7 bg-zinc-900/50 backdrop-blur-sm p-8 md:p-12 rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden">
+                            <div className="md:col-span-7 glass-card p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 -rotate-45 translate-x-16 -translate-y-16 blur-xl"></div>
 
                                 {status === "success" ? (
@@ -136,6 +140,11 @@ export default function ContactPage() {
                                     </div>
                                 ) : (
                                     <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
+                                        {submitError && (
+                                            <div role="alert" className="p-4 rounded-2xl border border-red-500/30 bg-red-500/10 text-sm font-bold text-red-300">
+                                                {submitError}
+                                            </div>
+                                        )}
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Identity</label>

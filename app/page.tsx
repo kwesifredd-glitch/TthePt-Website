@@ -113,7 +113,7 @@ export default function Home() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="absolute bottom-8 right-8 hidden lg:block z-10"
           >
-            <div className="bg-black/60 backdrop-blur-xl p-6 rounded-3xl flex items-center gap-6 border border-white/10 shadow-2xl">
+            <div className="glass-card p-6 rounded-3xl flex items-center gap-6">
               <div className="flex flex-col items-center">
                 <span className="text-3xl md:text-4xl font-black text-white">500+</span>
                 <span className="text-[10px] font-black text-primary tracking-[0.2em] uppercase">Successes</span>
@@ -223,7 +223,7 @@ export default function Home() {
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
                   <div className="absolute top-4 right-4">
-                    <div className="px-3 py-1 bg-black/70 backdrop-blur-md rounded-full border border-white/10 text-[9px] font-black tracking-widest flex items-center gap-2">
+                    <div className="px-3 py-1 bg-black/70 backdrop-blur-md rounded-full border border-white/10 text-[10px] font-black tracking-widest flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> VIDEO | {galleryItems[3].duration}
                     </div>
                   </div>
@@ -249,7 +249,7 @@ export default function Home() {
                   <Image src={galleryItems[4].src} alt={galleryItems[4].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
                   <div className="absolute bottom-5 left-5 right-5">
-                    <p className="text-[8px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[4].category}</p>
+                    <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[4].category}</p>
                     <h4 className="text-sm font-black italic uppercase text-white tracking-tighter">{galleryItems[4].title}</h4>
                   </div>
                 </AnimatedSection>
@@ -270,7 +270,7 @@ export default function Home() {
             <div className="flex overflow-hidden select-none [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
               <div className="flex gap-6 py-4 animate-ticker hover:[animation-play-state:paused] whitespace-nowrap">
                 {[...testimonials, ...testimonials, ...testimonials].map((t, idx) => (
-                  <div key={idx} className="w-[320px] sm:w-[420px] flex-shrink-0 bg-zinc-900/60 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-3xl group hover:border-primary/40 transition-all duration-500">
+                  <div key={idx} className="w-[320px] sm:w-[420px] flex-shrink-0 glass-card p-6 md:p-8 rounded-3xl group hover:border-primary/40 transition-all duration-500">
                     <div className="flex items-center gap-1 text-primary mb-4">
                       {[...Array(5)].map((_, i) => <Star key={i} className="h-3.5 w-3.5 fill-primary" />)}
                     </div>
@@ -284,11 +284,11 @@ export default function Home() {
                         </div>
                         <div>
                           <h4 className="text-xs md:text-sm font-black tracking-widest text-white italic">{t.author}</h4>
-                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">{t.role}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">{t.role}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-[8px] font-black text-white/30 uppercase tracking-widest leading-none mb-1">TENURE</p>
+                        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest leading-none mb-1">TENURE</p>
                         <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{t.duration}</p>
                       </div>
                     </div>

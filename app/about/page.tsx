@@ -111,7 +111,7 @@ export default function AboutPage() {
                                 }
                             ].map((pillar, idx) => (
                                 <StaggerItem key={idx}>
-                                    <div className="group h-full p-8 sm:p-12 rounded-3xl bg-black border border-white/10 hover:border-primary/50 transition-all duration-500 hover:-translate-y-2">
+                                    <div className="group h-full p-8 sm:p-12 rounded-3xl glass-card hover:border-primary/50 transition-all duration-500 hover:-translate-y-2">
                                         <div className="bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center text-primary mb-8 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all">
                                             <pillar.icon className="h-8 w-8" />
                                         </div>
