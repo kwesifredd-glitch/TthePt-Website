@@ -411,7 +411,7 @@ export default function MealPlansPage() {
 
                         <div className="grid md:grid-cols-2 gap-8">
                             {workoutPlan.map((session, idx) => (
-                                <div key={idx} className="group relative bg-black border border-white/5 rounded-[3rem] p-10 hover:border-primary/40 transition-all duration-500">
+                                <div key={idx} className="group relative glass-card rounded-[3rem] p-10 hover:border-primary/40 transition-all duration-500">
                                     <div className="flex justify-between items-start mb-10">
                                         <div>
                                             <p className="text-[10px] font-black text-primary tracking-[0.3em] uppercase mb-2">{session.day}</p>
@@ -427,7 +427,7 @@ export default function MealPlansPage() {
                                             <Droplets className="h-5 w-5" />
                                         </div>
                                         <div>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-primary/60">Warm Up Protocol</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Warm Up Protocol</p>
                                             <p className="text-xs font-bold text-white italic">{session.warmup}</p>
                                         </div>
                                     </div>
@@ -556,24 +556,24 @@ export default function MealPlansPage() {
                                 <div
                                     key={protocol.id}
                                     className={cn(
-                                        "group relative flex flex-col p-1 bg-zinc-950 rounded-[2.5rem] border transition-all duration-700 overflow-hidden",
+                                        "group relative flex flex-col p-1 glass-card rounded-[2.5rem] border transition-all duration-700 overflow-hidden",
                                         protocol.highlight ? "border-primary/50 shadow-[0_0_50px_rgba(255,77,0,0.1)]" : "border-white/5 hover:border-white/20"
                                     )}
                                 >
                                     {/* Inner Card */}
-                                    <div className="p-8 flex-1 flex flex-col rounded-[2.3rem] bg-black transition-colors">
+                                    <div className="p-8 flex-1 flex flex-col rounded-[2.3rem] bg-black/30 transition-colors">
                                         <div className="flex justify-between items-start mb-6">
                                             <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                                 <Flame className="h-7 w-7" />
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[9px] font-black text-primary tracking-widest uppercase mb-1">TARGET</p>
-                                                <p className="text-lg font-black italic text-white tracking-tighter">{protocol.kcal} <span className="text-[9px] not-italic text-gray-600">KCAL</span></p>
+                                                <p className="text-[10px] font-black text-primary tracking-widest uppercase mb-1">TARGET</p>
+                                                <p className="text-lg font-black italic text-white tracking-tighter">{protocol.kcal} <span className="text-[10px] not-italic text-gray-600">KCAL</span></p>
                                             </div>
                                         </div>
 
                                         <h4 className="text-xl font-black italic uppercase tracking-tight text-white mb-1 group-hover:text-primary transition-colors">{protocol.title}</h4>
-                                        <p className="text-[9px] font-black text-gray-500 tracking-[0.2em] mb-6 uppercase">{protocol.category}</p>
+                                        <p className="text-[10px] font-black text-gray-500 tracking-[0.2em] mb-6 uppercase">{protocol.category}</p>
 
                                         {!isClientSignedUp ? (
                                             /* Locked State when client hasn't signed up */
@@ -595,7 +595,7 @@ export default function MealPlansPage() {
                                                             setModalTab("verify");
                                                             setIsClearanceModalOpen(true);
                                                         }}
-                                                        className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                                                        className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1 cursor-pointer"
                                                     >
                                                         <span>Verify Registered Email</span>
                                                         <ChevronRight className="h-3 w-3" />
@@ -604,8 +604,8 @@ export default function MealPlansPage() {
 
                                                 <div className="bg-zinc-950 rounded-2xl p-4 border border-white/5 mb-6 opacity-60">
                                                     <div className="flex justify-between items-center mb-2">
-                                                        <span className="text-[8px] font-black tracking-widest text-gray-400 uppercase">Macro Targets</span>
-                                                        <span className="text-[8px] font-black text-red-400 uppercase tracking-wider">Locked</span>
+                                                        <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Macro Targets</span>
+                                                        <span className="text-[10px] font-black text-red-400 uppercase tracking-wider">Locked</span>
                                                     </div>
                                                     <div className="grid grid-cols-3 gap-2">
                                                         {Object.entries(protocol.macros).map(([type, val]) => (
@@ -634,15 +634,15 @@ export default function MealPlansPage() {
                                                 {unlocked.includes(protocol.id) ? (
                                                     <div className="space-y-3 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1">
                                                         <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                                                            <span className="text-[8px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1">
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1">
                                                                 <CheckCircle2 className="h-3 w-3" />
                                                                 Clearance Active
                                                             </span>
-                                                            <span className="text-[8px] font-mono text-gray-500">{protocol.meals.length} Deployments</span>
+                                                            <span className="text-[10px] font-mono text-gray-500">{protocol.meals.length} Deployments</span>
                                                         </div>
                                                         {protocol.meals.map((meal, idx) => (
                                                             <div key={idx} className="bg-white/5 p-3 rounded-xl border border-white/5 group/meal hover:border-primary/30 transition-colors">
-                                                                <p className="text-[8px] font-black text-primary uppercase mb-1">Meal {idx + 1}</p>
+                                                                <p className="text-[10px] font-black text-primary uppercase mb-1">Meal {idx + 1}</p>
                                                                 <p className="text-[11px] font-bold text-white italic leading-tight">{meal}</p>
                                                             </div>
                                                         ))}
@@ -656,7 +656,7 @@ export default function MealPlansPage() {
                                                         {/* Macro Split */}
                                                         <div className="bg-zinc-950 rounded-3xl p-6 border border-white/5 mb-8">
                                                             <div className="flex justify-between items-end mb-4">
-                                                                <span className="text-[9px] font-black tracking-widest text-primary uppercase">Macro Split</span>
+                                                                <span className="text-[10px] font-black tracking-widest text-primary uppercase">Macro Split</span>
                                                                 <div className="flex items-center gap-2">
                                                                     <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
                                                                     <div className="w-1.5 h-1.5 rounded-full bg-white/20"></div>
@@ -739,24 +739,24 @@ export default function MealPlansPage() {
                                 <div
                                     key={protocol.id}
                                     className={cn(
-                                        "group relative flex flex-col p-1 bg-zinc-950 rounded-[2.5rem] border transition-all duration-700 overflow-hidden",
+                                        "group relative flex flex-col p-1 glass-card rounded-[2.5rem] border transition-all duration-700 overflow-hidden",
                                         protocol.highlight ? "border-primary/50 shadow-[0_0_50px_rgba(255,77,0,0.1)]" : "border-white/5 hover:border-white/20"
                                     )}
                                 >
                                     {/* Inner Card */}
-                                    <div className="p-8 flex-1 flex flex-col rounded-[2.3rem] bg-black transition-colors">
+                                    <div className="p-8 flex-1 flex flex-col rounded-[2.3rem] bg-black/30 transition-colors">
                                         <div className="flex justify-between items-start mb-6">
                                             <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                                 <Target className="h-7 w-7" />
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[9px] font-black text-primary tracking-widest uppercase mb-1">TARGET</p>
-                                                <p className="text-lg font-black italic text-white tracking-tighter">{protocol.kcal} <span className="text-[9px] not-italic text-gray-600">KCAL</span></p>
+                                                <p className="text-[10px] font-black text-primary tracking-widest uppercase mb-1">TARGET</p>
+                                                <p className="text-lg font-black italic text-white tracking-tighter">{protocol.kcal} <span className="text-[10px] not-italic text-gray-600">KCAL</span></p>
                                             </div>
                                         </div>
 
                                         <h4 className="text-xl font-black italic uppercase tracking-tight text-white mb-1 group-hover:text-primary transition-colors">{protocol.title}</h4>
-                                        <p className="text-[9px] font-black text-gray-500 tracking-[0.2em] mb-6 uppercase">{protocol.category}</p>
+                                        <p className="text-[10px] font-black text-gray-500 tracking-[0.2em] mb-6 uppercase">{protocol.category}</p>
 
                                         {!isClientSignedUp ? (
                                             /* Locked State for Non-Signed-up Clients */
@@ -778,7 +778,7 @@ export default function MealPlansPage() {
                                                             setModalTab("verify");
                                                             setIsClearanceModalOpen(true);
                                                         }}
-                                                        className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                                                        className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1 cursor-pointer"
                                                     >
                                                         <span>Verify Registered Email</span>
                                                         <ChevronRight className="h-3 w-3" />
@@ -787,8 +787,8 @@ export default function MealPlansPage() {
 
                                                 <div className="bg-zinc-950 rounded-2xl p-4 border border-white/5 mb-6 opacity-60">
                                                     <div className="flex justify-between items-center mb-2">
-                                                        <span className="text-[8px] font-black tracking-widest text-gray-400 uppercase">Macro Targets</span>
-                                                        <span className="text-[8px] font-black text-red-400 uppercase tracking-wider">Locked</span>
+                                                        <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Macro Targets</span>
+                                                        <span className="text-[10px] font-black text-red-400 uppercase tracking-wider">Locked</span>
                                                     </div>
                                                     <div className="grid grid-cols-3 gap-2">
                                                         {Object.entries(protocol.macros).map(([type, val]) => (
@@ -817,15 +817,15 @@ export default function MealPlansPage() {
                                                 {unlocked.includes(protocol.id) ? (
                                                     <div className="space-y-3 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1">
                                                         <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                                                            <span className="text-[8px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1">
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1">
                                                                 <CheckCircle2 className="h-3 w-3" />
                                                                 Recon Intel Active
                                                             </span>
-                                                            <span className="text-[8px] font-mono text-gray-500">{protocol.meals.length} Deployments</span>
+                                                            <span className="text-[10px] font-mono text-gray-500">{protocol.meals.length} Deployments</span>
                                                         </div>
                                                         {protocol.meals.map((meal, idx) => (
                                                             <div key={idx} className="bg-white/5 p-3 rounded-xl border border-white/5 group/meal hover:border-primary/30 transition-colors">
-                                                                <p className="text-[8px] font-black text-primary uppercase mb-1">Meal {idx + 1}</p>
+                                                                <p className="text-[10px] font-black text-primary uppercase mb-1">Meal {idx + 1}</p>
                                                                 <p className="text-[11px] font-bold text-white italic leading-tight">{meal}</p>
                                                             </div>
                                                         ))}
@@ -839,7 +839,7 @@ export default function MealPlansPage() {
                                                         {/* Macro Split */}
                                                         <div className="bg-zinc-950 rounded-3xl p-6 border border-white/5 mb-8">
                                                             <div className="flex justify-between items-end mb-4">
-                                                                <span className="text-[9px] font-black tracking-widest text-primary uppercase">Macro Split</span>
+                                                                <span className="text-[10px] font-black tracking-widest text-primary uppercase">Macro Split</span>
                                                                 <div className="flex items-center gap-2">
                                                                     <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
                                                                     <div className="w-1.5 h-1.5 rounded-full bg-white/20"></div>
@@ -982,7 +982,7 @@ export default function MealPlansPage() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative bg-zinc-950 border border-white/10 rounded-[2.5rem] p-6 sm:p-10 max-w-lg w-full shadow-[0_0_60px_rgba(0,0,0,0.9)] overflow-hidden z-10"
+                            className="relative glass-card bg-zinc-950/80 rounded-[2.5rem] p-6 sm:p-10 max-w-lg w-full overflow-hidden z-10"
                         >
                             {/* Header glow */}
                             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />

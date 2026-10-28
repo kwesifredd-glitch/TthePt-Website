@@ -1,52 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/ui/animated-section";
-import { motion } from "framer-motion";
+import { HeroSlider } from "@/components/home/HeroSlider";
 import {
   ArrowRight,
-  TrendingUp,
   Users,
   Target,
   Shield,
-  Zap,
-  Star,
-  Play,
-  CheckCircle
+  Zap
 } from "lucide-react";
 import Image from "next/image";
 
-const testimonials = [
-  {
-    quote: "MARCUS DOESN'T JUST GIVE YOU A WORKOUT; HE GIVES YOU A BLUEPRINT FOR DOMINANCE. MY RECOVERY AND PERFORMANCE HAVE NEVER BEEN AT THIS LEVEL.",
-    author: "ALEXANDER V.",
-    role: "TECH FOUNDER",
-    duration: "18 MONTHS"
-  },
-  {
-    quote: "THE PRECISION IS UNMATCHED. EVERY VARIABLE IS OPTIMIZED. IF YOU ARE SERIOUS ABOUT YOUR PHYSIQUE, THERE IS NO OTHER OPTION.",
-    author: "SARAH J.",
-    role: "AMATEUR ATHLETE",
-    duration: "12 MONTHS"
-  },
-  {
-    quote: "THE MENTAL TOUGHNESS I'VE DEVELOPED IS JUST AS VALUABLE AS THE PHYSICAL RESULTS. THIS IS ELITE LEVEL COACHING.",
-    author: "JAMES R.",
-    role: "OPERATIONS DIRECTOR",
-    duration: "6 MONTHS"
-  }
-];
-
+// Photos from @_tthept__ on Instagram
 const galleryItems = [
-  { type: 'image', src: '/gallery/img-1.jpg', title: 'FIELD OPERATOR 01', category: 'CONDITIONING' },
-  { type: 'image', src: '/gallery/img-2.jpg', title: 'FIELD OPERATOR 02', category: 'EXPLOSIVE POWER' },
-  { type: 'image', src: '/gallery/img-3.jpg', title: 'FIELD OPERATOR 03', category: 'POST-ISO ANALYSIS' },
-  { type: 'video', src: '/gallery/img-4.jpg', title: 'PROTOCOL DRILL 01', category: 'KINETIC ANALYSIS', duration: '00:45' },
-  { type: 'image', src: '/gallery/img-5.jpg', title: 'FIELD OPERATOR 04', category: 'RECOVERY PHASE' },
+  { src: '/instagram/rugby-half.jpg', title: 'Rugby Half Marathon', category: 'Race Day', alt: 'Terrence with his medal after the Rugby Half Marathon' },
+  { src: '/instagram/coventry-10k.jpg', title: 'Coventry 10K', category: 'Race Day', alt: 'Terrence holding his medal after the Coventry 10K' },
+  { src: '/instagram/marathon-finish.jpg', title: 'Medal Earned', category: 'Endurance', alt: 'Terrence after a race with his finisher medal' },
+  { src: '/instagram/lisbon-half.jpg', title: 'Lisbon Half Marathon', category: 'Finish Line', alt: 'Terrence crossing the finish line of the Lisbon Half Marathon' },
+  { src: '/instagram/class-packed.jpg', title: 'Foundry Gym, Coventry', category: 'Tuesday Class', alt: 'The Welcome to Foundry Gym Coventry wall where Terrence runs his Tuesday class' },
 ];
 
 export default function Home() {
@@ -57,18 +32,7 @@ export default function Home() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative min-h-[95vh] pt-20 flex items-center bg-black overflow-hidden">
-          {/* Background Image with Dynamic Gradient */}
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="/hero-new.jpg"
-              alt="TthePT Elite Coaching"
-              fill
-              className="object-cover opacity-85 scale-105 transition-all duration-1000"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/30"></div>
-          </div>
+          <HeroSlider />
 
           <div className="container-custom relative z-10 py-12 md:py-24 pl-4 sm:pl-6 lg:pl-8 -ml-2 sm:-ml-4 lg:-ml-8 xl:-ml-12">
             <StaggerContainer className="max-w-3xl space-y-6 md:space-y-8">
@@ -106,25 +70,6 @@ export default function Home() {
             </StaggerContainer>
           </div>
 
-          {/* Floating Stats */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="absolute bottom-8 right-8 hidden lg:block z-10"
-          >
-            <div className="bg-black/60 backdrop-blur-xl p-6 rounded-3xl flex items-center gap-6 border border-white/10 shadow-2xl">
-              <div className="flex flex-col items-center">
-                <span className="text-3xl md:text-4xl font-black text-white">500+</span>
-                <span className="text-[10px] font-black text-primary tracking-[0.2em] uppercase">Successes</span>
-              </div>
-              <div className="h-10 w-[1px] bg-white/10"></div>
-              <div className="flex flex-col items-center">
-                <span className="text-3xl md:text-4xl font-black text-white">12+</span>
-                <span className="text-[10px] font-black text-primary tracking-[0.2em] uppercase">Pro Certs</span>
-              </div>
-            </div>
-          </motion.div>
         </section>
 
         {/* Feature Grid - The "Why" */}
@@ -183,11 +128,14 @@ export default function Home() {
           <div className="container-custom">
             <AnimatedSection className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 md:mb-20">
               <div>
-                <h2 className="text-xs font-black text-primary tracking-[0.4em] uppercase mb-3">Visual Evidence</h2>
+                <h2 className="text-xs font-black text-primary tracking-[0.4em] uppercase mb-3">On Instagram</h2>
                 <h3 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter italic uppercase leading-none">THE <span className="text-primary not-italic">VAULT</span></h3>
               </div>
               <p className="text-gray-400 max-w-md font-bold uppercase tracking-widest text-xs md:text-sm italic">
-                Declassified footage of elite personnel during operation-ready conditioning phases.
+                Race days, classes and community runs.{" "}
+                <a href="https://www.instagram.com/_tthept__" target="_blank" rel="noopener noreferrer" className="text-primary not-italic hover:underline">
+                  Follow @_tthept__
+                </a>
               </p>
             </AnimatedSection>
 
@@ -195,7 +143,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[600px] md:h-[750px]">
               {/* Item 1 - Tall */}
               <AnimatedSection direction="left" className="md:col-span-4 h-[350px] md:h-auto relative group overflow-hidden rounded-[2rem] border border-white/10">
-                <Image src={galleryItems[0].src} alt={galleryItems[0].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                <Image src={galleryItems[0].src} alt={galleryItems[0].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
                 <div className="absolute bottom-6 left-6 right-6">
                   <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[0].category}</p>
@@ -206,7 +154,7 @@ export default function Home() {
               {/* Middle Column */}
               <div className="md:col-span-5 grid grid-cols-1 gap-6 md:grid-rows-2">
                 <AnimatedSection direction="up" className="h-[280px] md:h-auto relative group overflow-hidden rounded-[2rem] border border-white/10">
-                  <Image src={galleryItems[1].src} alt={galleryItems[1].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <Image src={galleryItems[1].src} alt={galleryItems[1].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
                   <div className="absolute bottom-6 left-6 right-6">
                     <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[1].category}</p>
@@ -215,18 +163,8 @@ export default function Home() {
                 </AnimatedSection>
 
                 <AnimatedSection direction="up" delay={0.1} className="h-[280px] md:h-auto relative group overflow-hidden rounded-[2rem] border border-white/10">
-                  <Image src={galleryItems[3].src} alt={galleryItems[3].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity">
-                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary flex items-center justify-center text-white shadow-[0_0_30px_rgba(255,77,0,0.5)]">
-                      <Play className="h-7 w-7 md:h-8 md:w-8 fill-current ml-1" />
-                    </motion.div>
-                  </div>
+                  <Image src={galleryItems[3].src} alt={galleryItems[3].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
-                  <div className="absolute top-4 right-4">
-                    <div className="px-3 py-1 bg-black/70 backdrop-blur-md rounded-full border border-white/10 text-[9px] font-black tracking-widest flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> VIDEO | {galleryItems[3].duration}
-                    </div>
-                  </div>
                   <div className="absolute bottom-6 left-6 right-6">
                     <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[3].category}</p>
                     <h4 className="text-xl font-black italic uppercase text-white tracking-tighter">{galleryItems[3].title}</h4>
@@ -237,7 +175,7 @@ export default function Home() {
               {/* Right Column */}
               <div className="md:col-span-3 grid grid-cols-1 gap-6 md:grid-rows-3">
                 <AnimatedSection direction="right" className="h-[300px] md:h-auto md:row-span-2 relative group overflow-hidden rounded-[2rem] border border-white/10">
-                  <Image src={galleryItems[2].src} alt={galleryItems[2].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <Image src={galleryItems[2].src} alt={galleryItems[2].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
                   <div className="absolute bottom-6 left-6 right-6">
                     <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[2].category}</p>
@@ -246,62 +184,14 @@ export default function Home() {
                 </AnimatedSection>
 
                 <AnimatedSection direction="right" delay={0.15} className="h-[220px] md:h-auto relative group overflow-hidden rounded-[2rem] border border-white/10">
-                  <Image src={galleryItems[4].src} alt={galleryItems[4].title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <Image src={galleryItems[4].src} alt={galleryItems[4].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
                   <div className="absolute bottom-5 left-5 right-5">
-                    <p className="text-[8px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[4].category}</p>
+                    <p className="text-[10px] font-black text-primary tracking-[0.3em] mb-1 uppercase">{galleryItems[4].category}</p>
                     <h4 className="text-sm font-black italic uppercase text-white tracking-tighter">{galleryItems[4].title}</h4>
                   </div>
                 </AnimatedSection>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials Ticker */}
-        <section className="py-20 md:py-32 bg-black text-white relative overflow-hidden">
-          <div className="text-center mb-16 relative z-10">
-            <h2 className="text-xs font-black text-primary tracking-[0.4em] uppercase mb-3">Client Intel</h2>
-            <h3 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight italic uppercase">Field <span className="text-primary not-italic">Reports</span></h3>
-          </div>
-
-          <div className="relative z-10">
-            {/* Horizontal Ticker */}
-            <div className="flex overflow-hidden select-none [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
-              <div className="flex gap-6 py-4 animate-ticker hover:[animation-play-state:paused] whitespace-nowrap">
-                {[...testimonials, ...testimonials, ...testimonials].map((t, idx) => (
-                  <div key={idx} className="w-[320px] sm:w-[420px] flex-shrink-0 bg-zinc-900/60 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-3xl group hover:border-primary/40 transition-all duration-500">
-                    <div className="flex items-center gap-1 text-primary mb-4">
-                      {[...Array(5)].map((_, i) => <Star key={i} className="h-3.5 w-3.5 fill-primary" />)}
-                    </div>
-                    <p className="text-base md:text-lg font-black italic uppercase tracking-tight leading-snug mb-6 text-white/90 whitespace-normal">
-                      &quot;{t.quote}&quot;
-                    </p>
-                    <div className="flex items-center justify-between border-t border-white/10 pt-4">
-                      <div className="flex items-center gap-3 text-left">
-                        <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center font-black text-xs text-primary italic border border-primary/30">
-                          {t.author.charAt(0)}
-                        </div>
-                        <div>
-                          <h4 className="text-xs md:text-sm font-black tracking-widest text-white italic">{t.author}</h4>
-                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">{t.role}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[8px] font-black text-white/30 uppercase tracking-widest leading-none mb-1">TENURE</p>
-                        <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{t.duration}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-16 text-center relative z-10 px-4">
-            <div className="inline-flex items-center gap-3 bg-white/5 px-6 py-3.5 rounded-full border border-white/10 text-xs md:text-sm">
-              <Users className="h-4 w-4 text-primary" />
-              <span className="font-bold text-gray-300">Join <span className="text-white font-black">500+</span> Elite Trainees Worldwide</span>
             </div>
           </div>
         </section>
@@ -314,7 +204,7 @@ export default function Home() {
                 Ready to be <br /><span className="not-italic">unbreakable?</span>
               </h2>
               <p className="text-white/95 text-lg md:text-2xl max-w-2xl font-bold mb-10 md:mb-12 leading-relaxed">
-                Limited slots available for Q1 intake. Application required for new trainees.
+                New clients welcome. Pick a package and book your first session online in a couple of minutes.
               </p>
               <Button size="lg" className="bg-white text-black hover:bg-black hover:text-white text-lg md:text-xl px-10 md:px-14 h-16 md:h-20 rounded-full font-black transition-all hover:scale-105 shadow-2xl" asChild>
                 <Link href="/booking">Secure Your Spot <ArrowRight className="ml-2 h-6 w-6" /></Link>

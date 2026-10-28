@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MapPin, Phone, MessageSquare, Send, Instagram } from "lucide-react";
+import { MessageSquare, Send, Instagram } from "lucide-react";
 import { useState } from "react";
 
 export default function ContactPage() {
@@ -16,10 +16,12 @@ export default function ContactPage() {
         email: "",
         objective: ""
     });
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus("submitting");
+        setSubmitError(null);
         try {
             const res = await fetch("/api/contact", {
                 method: "POST",
@@ -33,11 +35,13 @@ export default function ContactPage() {
             if (res.ok) {
                 setStatus("success");
             } else {
-                alert("Failed to submit inquiry. Please try again.");
+                const data = await res.json().catch(() => ({}));
+                setSubmitError(data.error || "Your message didn't send. Please try again.");
                 setStatus("idle");
             }
         } catch (error) {
             console.error("Submission failed", error);
+            setSubmitError("We couldn't reach the server. Check your connection and try again.");
             setStatus("idle");
         }
     };
@@ -69,7 +73,7 @@ export default function ContactPage() {
                             {/* Contact Info */}
                             <div className="md:col-span-5 space-y-12">
                                 <div className="space-y-4">
-                                    <h2 className="text-2xl font-black uppercase italic tracking-tight">Intelligence</h2>
+                                    <h2 className="text-2xl font-black uppercase italic tracking-tight">Get In Touch</h2>
                                     <p className="text-gray-500 font-medium leading-relaxed">
                                         Headquarters is operational 24/7 for elite trainees. Response latency for new inquiries is typically less than 12 hours.
                                     </p>
@@ -77,10 +81,7 @@ export default function ContactPage() {
 
                                 <div className="space-y-8">
                                     {[
-                                        { icon: MapPin, label: "Command Center", val: "123 Elite Plaza, London", href: "#" },
-                                        { icon: Mail, label: "Digital Signal", val: "elite@thept.com", href: "mailto:elite@thept.com" },
-                                        { icon: Phone, label: "Voice Comms", val: "+44 20 7123 4567", href: "tel:+442071234567" },
-                                        { icon: Instagram, label: "Intelligence Feed", val: "@_tthept__", href: "https://www.instagram.com/_tthept__?igsh=MzdjbmM2aGlnbnQ4" },
+                                        { icon: Instagram, label: "Instagram", val: "@_tthept__", href: "https://www.instagram.com/_tthept__?igsh=MzdjbmM2aGlnbnQ4" },
                                         {
                                             icon: ({ className }: { className?: string }) => (
                                                 <svg
@@ -95,7 +96,7 @@ export default function ContactPage() {
                                                     <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
                                                 </svg>
                                             ),
-                                            label: "Kinetic Stream",
+                                            label: "TikTok",
                                             val: "@tthept",
                                             href: "https://www.tiktok.com/@tthept"
                                         }
@@ -120,7 +121,7 @@ export default function ContactPage() {
                             </div>
 
                             {/* Contact Form */}
-                            <div className="md:col-span-7 bg-zinc-900/50 backdrop-blur-sm p-8 md:p-12 rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden">
+                            <div className="md:col-span-7 glass-card p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 -rotate-45 translate-x-16 -translate-y-16 blur-xl"></div>
 
                                 {status === "success" ? (
@@ -128,7 +129,7 @@ export default function ContactPage() {
                                         <div className="mx-auto w-24 h-24 bg-primary text-white rounded-full flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(255,77,0,0.4)]">
                                             <Send className="h-10 w-10" />
                                         </div>
-                                        <h3 className="text-3xl font-black uppercase italic mb-4">Message Relayed</h3>
+                                        <h3 className="text-3xl font-black uppercase italic mb-4">Message Sent</h3>
                                         <p className="text-gray-400 font-medium italic mb-8">Maintain readiness. Our team will contact you shortly.</p>
                                         <Button variant="outline" className="h-14 px-10 rounded-full border-white/10 text-white font-black uppercase tracking-widest hover:bg-white hover:text-black" onClick={() => setStatus("idle")}>
                                             New Submission
@@ -136,45 +137,50 @@ export default function ContactPage() {
                                     </div>
                                 ) : (
                                     <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
+                                        {submitError && (
+                                            <div role="alert" className="p-4 rounded-2xl border border-red-500/30 bg-red-500/10 text-sm font-bold text-red-300">
+                                                {submitError}
+                                            </div>
+                                        )}
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Identity</label>
+                                                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">First name</label>
                                                 <Input
-                                                    placeholder="MARCUS"
+                                                    placeholder="First name"
                                                     required
                                                     value={formData.firstName}
                                                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                                    className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/10"
+                                                    className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/30"
                                                 />
                                             </div>
                                             <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Cognomen</label>
+                                                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Last name</label>
                                                 <Input
-                                                    placeholder="AURELIUS"
+                                                    placeholder="Last name"
                                                     value={formData.lastName}
                                                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                                    className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/10"
+                                                    className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/30"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Signal Hash (Email)</label>
+                                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Email</label>
                                             <Input
                                                 type="email"
-                                                placeholder="YOU@ELITE.COM"
+                                                placeholder="you@example.com"
                                                 required
                                                 value={formData.email}
                                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/10"
+                                                className="h-14 bg-white/5 border-white/10 rounded-xl focus:ring-primary font-bold placeholder:text-white/30"
                                             />
                                         </div>
 
                                         <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Objective</label>
+                                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-1">Your goals</label>
                                             <Textarea
-                                                placeholder="Detail your mission requirements..."
-                                                className="min-h-[150px] bg-white/5 border-white/10 rounded-2xl focus:ring-primary font-bold placeholder:text-white/10 p-6"
+                                                placeholder="Tell us what you want to achieve and any questions you have..."
+                                                className="min-h-[150px] bg-white/5 border-white/10 rounded-2xl focus:ring-primary font-bold placeholder:text-white/30 p-6"
                                                 required
                                                 value={formData.objective}
                                                 onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
@@ -182,7 +188,7 @@ export default function ContactPage() {
                                         </div>
 
                                         <Button type="submit" className="w-full h-16 rounded-full bg-primary hover:bg-orange-600 text-white font-black uppercase tracking-widest transition-all hover:scale-[1.02] shadow-xl" disabled={status === "submitting"}>
-                                            {status === "submitting" ? "Encoding..." : "Submit Transmission"}
+                                            {status === "submitting" ? "Sending..." : "Send Message"}
                                         </Button>
                                     </form>
                                 )}
