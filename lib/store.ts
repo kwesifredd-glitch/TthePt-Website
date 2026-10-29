@@ -46,6 +46,7 @@ export type Booking = {
     notes?: string;
     goals?: string;
     source?: 'website_booking' | 'contact_form' | 'manual_admin' | 'external_checkout';
+    holdUntil?: string; // ISO time a pending (awaiting payment) booking keeps its slot until
     createdAt: string;
 };
 
@@ -301,8 +302,13 @@ export const db = {
     // Availability
     getAvailableSlots: async (date: string): Promise<string[]> => {
         const data = await readDB();
+        const nowIso = new Date().toISOString();
         const bookedTimes = data.bookings
-            .filter(b => b.date === date && b.status === "confirmed")
+            .filter(b => b.date === date && (
+                b.status === "confirmed" ||
+                // Held while the client is paying
+                (b.status === "pending" && !!b.holdUntil && b.holdUntil > nowIso)
+            ))
             .map(b => b.time);
 
         let available = data.settings.availableHours.filter(time => !bookedTimes.includes(time));

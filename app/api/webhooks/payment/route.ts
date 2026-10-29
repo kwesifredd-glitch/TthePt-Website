@@ -2,6 +2,23 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import Stripe from 'stripe';
 import { db, Booking, Payment, PaymentPlatform } from '@/lib/store';
+import { confirmPaidSession, releaseExpiredSession } from '@/lib/stripe';
+
+// Signed Stripe events: confirm paid checkouts, release the slot of expired ones, ignore the rest
+async function handleStripeEvent(event: Stripe.Event) {
+    switch (event.type) {
+        case 'checkout.session.completed':
+        case 'checkout.session.async_payment_succeeded': {
+            const booking = await confirmPaidSession(event.data.object);
+            return NextResponse.json({ received: true, bookingId: booking?.id ?? null });
+        }
+        case 'checkout.session.expired':
+            await releaseExpiredSession(event.data.object);
+            return NextResponse.json({ received: true });
+        default:
+            return NextResponse.json({ received: true, ignored: event.type });
+    }
+}
 
 export async function GET() {
     const settings = await db.getSettings();
@@ -109,11 +126,13 @@ export async function POST(request: Request) {
             if (!stripeWebhookSecret) {
                 return NextResponse.json({ error: 'Stripe webhooks are not configured' }, { status: 503 });
             }
+            let event: Stripe.Event;
             try {
-                Stripe.webhooks.constructEvent(bodyText, stripeSignature, stripeWebhookSecret);
+                event = Stripe.webhooks.constructEvent(bodyText, stripeSignature, stripeWebhookSecret);
             } catch {
                 return NextResponse.json({ error: 'Invalid Stripe signature' }, { status: 401 });
             }
+            return handleStripeEvent(event);
         } else {
             const expected = process.env.WEBHOOK_SECRET || '';
             const provided = headersList.get('x-webhook-secret') || payload.secret || '';

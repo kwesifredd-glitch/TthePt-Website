@@ -18,15 +18,29 @@ import {
     User,
     Zap,
     ChevronRight,
-    Lock,
+    Loader2,
+    AlertCircle,
     Activity,
     Target
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STRIPE_PAYMENT_LINKS, stripeCheckoutUrl } from "@/lib/payment-links";
 import { PACKAGES } from "@/lib/packages";
+import { EmbeddedPayment } from "@/components/booking/EmbeddedPayment";
 
 const packages = PACKAGES;
+const embeddedPayments = Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+type PaymentResult = "checking" | "paid" | "processing" | "failed";
+type BookingSummary = { date: string; time: string; package?: string };
+
+const RESULT_COPY: Record<PaymentResult | "inPerson", { title: string; accent: string; label: string; note: string }> = {
+    checking: { title: "ONE", accent: "MOMENT", label: "CHECKING YOUR PAYMENT", note: "This only takes a few seconds." },
+    paid: { title: "YOU'RE", accent: "BOOKED", label: "PAYMENT COMPLETE", note: "Stripe will email you a receipt. Your coach will be in touch before your first session." },
+    processing: { title: "NEARLY", accent: "THERE", label: "PAYMENT PROCESSING", note: "Your payment is still going through. We'll confirm your booking by email once it clears." },
+    failed: { title: "NOT", accent: "BOOKED", label: "PAYMENT NOT COMPLETED", note: "Your payment didn't go through, so no booking was made and you haven't been charged." },
+    inPerson: { title: "YOU'RE", accent: "BOOKED", label: "BOOKING CONFIRMED", note: "Your coach will be in touch to confirm. Payment is settled at your first session." },
+};
 
 
 export default function BookingPage() {
@@ -39,15 +53,34 @@ export default function BookingPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [returnedFromPayment, setReturnedFromPayment] = useState(false);
+    const [clientSecret, setClientSecret] = useState<string | null>(null);
+    const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
+    const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
+    const [returnedBooking, setReturnedBooking] = useState<BookingSummary | null>(null);
     const hasStripeLink = Boolean(STRIPE_PAYMENT_LINKS[selectedPackage.name]);
+    const paysOnline = embeddedPayments || hasStripeLink;
 
     useEffect(() => {
         setIsMounted(true);
-        // Stripe sends clients back to /booking?paid=1 after checkout
-        if (new URLSearchParams(window.location.search).get("paid") === "1") {
-            setReturnedFromPayment(true);
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get("session_id");
+
+        // Embedded checkout returns to /booking?session_id=...; check the payment before saying it's booked
+        if (sessionId) {
             setStep("success");
+            setPaymentResult("checking");
+            fetch(`/api/bookings/checkout?session_id=${encodeURIComponent(sessionId)}`)
+                .then(async (res) => {
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.error);
+                    if (data.booking) setReturnedBooking(data.booking);
+                    setPaymentResult(data.status === "paid" ? "paid" : data.status === "complete" ? "processing" : "failed");
+                })
+                .catch(() => setPaymentResult("failed"));
+        } else if (params.get("paid") === "1") {
+            // Payment Links send clients back to /booking?paid=1
+            setStep("success");
+            setPaymentResult("paid");
         }
     }, []);
 
@@ -101,13 +134,19 @@ export default function BookingPage() {
             });
 
             if (res.ok) {
-                const { booking } = await res.json();
+                const { booking, clientSecret: secret } = await res.json();
                 if (typeof window !== "undefined") {
                     localStorage.setItem("tthept_client_signed_up", "true");
                     localStorage.setItem("tthept_client_email", formData.email);
                     localStorage.setItem("tthept_client_name", formData.name);
                 }
-                // Hand off to Stripe; client_reference_id ties the payment back to this booking
+                // Pay on this page; the slot is held until the payment completes
+                if (secret) {
+                    setPendingBookingId(booking.id);
+                    setClientSecret(secret);
+                    return;
+                }
+                // Fallback: hand off to a Stripe Payment Link; client_reference_id ties the payment back to this booking
                 const stripeUrl = stripeCheckoutUrl(selectedPackage.name, formData.email, booking.id);
                 if (stripeUrl) {
                     window.location.href = stripeUrl;
@@ -132,11 +171,42 @@ export default function BookingPage() {
         }
     };
 
+    // Going back mid-payment: end the checkout so the held slot is free to pick again
+    const handleCancelPayment = async () => {
+        setIsLoading(true);
+        try {
+            if (pendingBookingId) {
+                const res = await fetch("/api/bookings/checkout", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ bookingId: pendingBookingId })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (data.paid) {
+                    setPaymentResult("paid");
+                    setStep("success");
+                    return;
+                }
+            }
+            setClientSecret(null);
+            setPendingBookingId(null);
+            setStep("details");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const summary: BookingSummary | null = returnedBooking
+        ?? (date && selectedSlot ? { date: format(date, "yyyy-MM-dd"), time: selectedSlot, package: selectedPackage.name } : null);
+    const showSummary = Boolean(summary) && paymentResult !== "checking" && paymentResult !== "failed";
+    const resultCopy = RESULT_COPY[paymentResult ?? "inPerson"];
+    const ResultIcon = paymentResult === "failed" ? AlertCircle : paymentResult === "checking" ? Loader2 : CheckCircle;
+
     const steps = [
         { id: "tier", label: "01. PACKAGE", icon: Zap },
         { id: "calendar", label: "02. DATE & TIME", icon: CalendarIcon },
         { id: "details", label: "03. DETAILS", icon: User },
-        { id: "payment", label: "04. CONFIRM", icon: Lock },
+        { id: "payment", label: "04. PAYMENT", icon: CreditCard },
     ];
 
     const stepOrder = ["tier", "calendar", "details", "payment", "success"];
@@ -438,7 +508,7 @@ export default function BookingPage() {
                                         >
                                             <div className="grid md:grid-cols-12 gap-8 md:gap-12">
                                                 <div className="md:col-span-12 text-center mb-4 md:mb-8">
-                                                    <h2 className="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter">CONFIRM <span className="text-primary not-italic">BOOKING</span></h2>
+                                                    <h2 className="text-3xl sm:text-4xl font-black uppercase italic tracking-tighter">{paysOnline ? "PAY &" : "CONFIRM"} <span className="text-primary not-italic">{paysOnline ? "BOOK" : "BOOKING"}</span></h2>
                                                 </div>
 
                                                 <div className="md:col-span-5 space-y-4 sm:space-y-6">
@@ -467,41 +537,62 @@ export default function BookingPage() {
 
                                                 </div>
 
-                                                <form onSubmit={(e) => { e.preventDefault(); handleConfirmBooking(); }} className="md:col-span-7 space-y-6">
-                                                    <div className="p-6 bg-black/40 border border-white/10 rounded-2xl space-y-3">
-                                                        <div className="flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-[0.3em]">
-                                                            <CreditCard className="h-4 w-4" />
-                                                            <span>{hasStripeLink ? "Secure Stripe Checkout" : "Pay In Person"}</span>
-                                                        </div>
-                                                        <p className="text-xs text-gray-400 leading-relaxed">
-                                                            {hasStripeLink
-                                                                ? "You'll be taken to Stripe's secure checkout to pay by card, Apple Pay or Revolut Pay. Your slot is reserved as soon as you continue."
-                                                                : "Your slot will be reserved now and payment is settled with your coach at your first session."}
+                                                {clientSecret ? (
+                                                    <div className="md:col-span-7 space-y-4">
+                                                        <EmbeddedPayment clientSecret={clientSecret} />
+                                                        <p className="text-[10px] font-black tracking-widest uppercase text-gray-500 text-center">
+                                                            Your slot is held for 30 minutes while you pay
                                                         </p>
-                                                    </div>
-
-                                                    <div className="pt-4 space-y-3">
-                                                        <Button
-                                                            type="submit"
-                                                            disabled={isLoading}
-                                                            className="w-full h-16 sm:h-20 rounded-full bg-white text-black font-black uppercase tracking-[0.3em] italic hover:bg-primary hover:text-white transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)] cursor-pointer"
-                                                        >
-                                                            {isLoading
-                                                                ? "Synchronizing..."
-                                                                : hasStripeLink
-                                                                    ? `PAY £${selectedPackage.price}.00 WITH STRIPE ↗`
-                                                                    : "CONFIRM BOOKING"}
-                                                        </Button>
                                                         <button
                                                             type="button"
                                                             className="w-full text-white/30 hover:text-white text-[10px] font-black tracking-widest uppercase transition-colors cursor-pointer"
-                                                            onClick={() => setStep("details")}
+                                                            onClick={handleCancelPayment}
                                                             disabled={isLoading}
                                                         >
-                                                            Edit my details
+                                                            {isLoading ? "One moment..." : "Change time or details"}
                                                         </button>
                                                     </div>
-                                                </form>
+                                                ) : (
+                                                    <form onSubmit={(e) => { e.preventDefault(); handleConfirmBooking(); }} className="md:col-span-7 space-y-6">
+                                                        <div className="p-6 bg-black/40 border border-white/10 rounded-2xl space-y-3">
+                                                            <div className="flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-[0.3em]">
+                                                                <CreditCard className="h-4 w-4" />
+                                                                <span>{paysOnline ? "Secure Payment by Stripe" : "Pay In Person"}</span>
+                                                            </div>
+                                                            <p className="text-xs text-gray-400 leading-relaxed">
+                                                                {embeddedPayments
+                                                                    ? "Pay on the next screen by card, Apple Pay or Google Pay. Your booking is confirmed as soon as the payment goes through."
+                                                                    : hasStripeLink
+                                                                        ? "You'll be taken to Stripe's secure checkout to pay by card, Apple Pay or Revolut Pay. Your slot is reserved as soon as you continue."
+                                                                        : "Your slot will be reserved now and payment is settled with your coach at your first session."}
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="pt-4 space-y-3">
+                                                            <Button
+                                                                type="submit"
+                                                                disabled={isLoading}
+                                                                className="w-full h-16 sm:h-20 rounded-full bg-white text-black font-black uppercase tracking-[0.3em] italic hover:bg-primary hover:text-white transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)] cursor-pointer"
+                                                            >
+                                                                {isLoading
+                                                                    ? "One moment..."
+                                                                    : embeddedPayments
+                                                                        ? `CONTINUE TO PAY £${selectedPackage.price}.00`
+                                                                        : hasStripeLink
+                                                                        ? `PAY £${selectedPackage.price}.00 WITH STRIPE ↗`
+                                                                        : "CONFIRM BOOKING"}
+                                                            </Button>
+                                                            <button
+                                                                type="button"
+                                                                className="w-full text-white/30 hover:text-white text-[10px] font-black tracking-widest uppercase transition-colors cursor-pointer"
+                                                                onClick={() => setStep("details")}
+                                                                disabled={isLoading}
+                                                            >
+                                                                Edit my details
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                )}
                                             </div>
                                         </motion.div>
                                     )}
@@ -517,43 +608,49 @@ export default function BookingPage() {
                                             <div className="relative mb-8 sm:mb-12">
                                                 <div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full scale-150 animate-pulse"></div>
                                                 <div className="relative bg-primary p-6 sm:p-8 rounded-[2rem] text-white shadow-[0_0_50px_rgba(255,77,0,0.6)] rotate-12">
-                                                    <CheckCircle className="h-16 w-16 sm:h-20 sm:w-20" />
+                                                    <ResultIcon className={cn("h-16 w-16 sm:h-20 sm:w-20", paymentResult === "checking" && "animate-spin")} />
                                                 </div>
                                             </div>
 
                                             <h2 className="text-4xl sm:text-6xl md:text-8xl font-black italic uppercase tracking-tighter mb-4 sm:mb-6 leading-none">
-                                                {returnedFromPayment ? "THANK" : "YOU'RE"} <span className="text-primary not-italic">{returnedFromPayment ? "YOU" : "BOOKED"}</span>
+                                                {resultCopy.title} <span className="text-primary not-italic">{resultCopy.accent}</span>
                                             </h2>
 
                                             <div className="glass-card p-6 sm:p-10 rounded-[2.5rem] max-w-xl w-full mb-8 sm:mb-12 shadow-inner relative overflow-hidden">
                                                 <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
-                                                <p className="text-xs font-black text-primary uppercase tracking-[0.4em] mb-4 sm:mb-6">{returnedFromPayment ? "PAYMENT COMPLETE" : "BOOKING CONFIRMED"}</p>
+                                                <p className="text-xs font-black text-primary uppercase tracking-[0.4em] mb-4 sm:mb-6">{resultCopy.label}</p>
 
-                                                {!returnedFromPayment && (<>
+                                                {showSummary && summary && (<>
                                                 <div className="flex justify-center gap-8 sm:gap-12 items-baseline mb-6 sm:mb-8">
                                                     <div className="text-left">
                                                         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">DATE</p>
-                                                        <p className="text-2xl sm:text-3xl font-black text-white italic">{date && format(date, "MMM dd")}</p>
+                                                        <p className="text-2xl sm:text-3xl font-black text-white italic">{format(new Date(`${summary.date}T00:00:00`), "MMM dd")}</p>
                                                     </div>
                                                     <div className="text-left">
                                                         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">TIME</p>
-                                                        <p className="text-2xl sm:text-3xl font-black text-white italic">{selectedSlot}</p>
+                                                        <p className="text-2xl sm:text-3xl font-black text-white italic">{summary.time}</p>
                                                     </div>
                                                 </div>
 
                                                 <div className="pt-6 border-t border-white/10 text-center">
                                                     <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">PACKAGE</p>
-                                                    <p className="text-xl sm:text-2xl font-black text-primary italic uppercase">{selectedPackage.name}</p>
+                                                    <p className="text-xl sm:text-2xl font-black text-primary italic uppercase">{summary.package}</p>
                                                 </div>
 
                                                 </>)}
 
-                                                <div className={cn(!returnedFromPayment && "pt-6 border-t border-white/10")}>
+                                                <div className={cn(showSummary && "pt-6 border-t border-white/10")}>
                                                     <p className="text-xs sm:text-sm font-bold text-gray-400 leading-relaxed italic">
-                                                        {returnedFromPayment
-                                                            ? "Stripe will email you a receipt. Your coach will be in touch to confirm your sessions."
-                                                            : "Your coach will be in touch to confirm. Payment is settled at your first session."}
+                                                        {resultCopy.note}
                                                     </p>
+                                                    {paymentResult === "failed" && (
+                                                        <Button
+                                                            onClick={() => window.location.assign("/booking")}
+                                                            className="mt-6 h-14 px-10 rounded-full bg-primary text-white font-black uppercase tracking-[0.2em] hover:bg-orange-600"
+                                                        >
+                                                            Try again
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </div>
 
