@@ -24,7 +24,7 @@ const PRESET_PACKAGES = [
     { name: "8 Sessions a month", price: 200 },
     { name: "3x a week", price: 75 },
     { name: "2 days a week", price: 55 },
-    { name: "Single Session", price: 30 },
+    { name: "Single Session", price: 35 },
     { name: "Custom Protocol", price: 150 },
 ];
 
