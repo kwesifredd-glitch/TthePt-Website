@@ -12,7 +12,7 @@ export const PACKAGES: TrainingPackage[] = [
     {
         id: "single",
         name: "1-to-1 session",
-        price: 30,
+        price: 35,
         desc: "A single one-to-one session.",
         highlight: false
     },
