@@ -89,6 +89,12 @@ const Footer = () => {
             <div className="container-custom">
                 <div className="border-t border-white/5 mt-20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-gray-600 tracking-widest uppercase">
                     <p>&copy; {new Date().getFullYear()} TthePT. ALL RIGHTS RESERVED.</p>
+                    <p>
+                        Designed and built by{" "}
+                        <a href="https://www.100impressions.com/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors">
+                            100 Impressions
+                        </a>
+                    </p>
                     <div className="flex gap-8 items-center">
                         <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
                         <Link href="/admin" className="hover:text-primary transition-colors flex items-center gap-1.5 text-zinc-500">
